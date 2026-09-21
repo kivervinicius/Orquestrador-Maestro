@@ -22,6 +22,7 @@ The current skill router, memory conventions, and context workflow remain author
 - `orquestrador/RESOLUTION_RUNTIME.json`: runtime mode, storage paths, initial strategy budgets, and validation policy.
 - `orquestrador/bin/resolution-runtime.ps1`: local append-only resolution runtime.
 - `orquestrador/bin/evidence-ranker.ps1`: deterministic marginal-evidence ranker used to compare information value against token cost.
+- `orquestrador/bin/resolution-report.ps1`: local baseline report for validation rate, TTVO, duration, budget adherence, LLM calls, and escalations.
 - `orquestrador/EVIDENCE_CANDIDATE_SCHEMA.json`: contract for candidate evidence supplied by integrations.
 - `scripts/test-resolution-runtime.ps1`: dependency-free runtime smoke test.
 - `scripts/test-evidence-ranker.ps1`: dependency-free evidence selection smoke test.
@@ -177,6 +178,17 @@ until hard validation passes
 ```
 
 Money, latency, tool execution, retries, and provider-specific prices can be layered on after reliable baseline telemetry exists.
+
+The local report can be generated with:
+
+```powershell
+& "$env:USERPROFILE\.orquestrador\bin\resolution-report.ps1"
+
+# machine-readable
+& "$env:USERPROFILE\.orquestrador\bin\resolution-report.ps1" -AsJson
+```
+
+The report groups validated outcome metrics by final strategy and exposes malformed ledger lines instead of silently discarding them. It is intentionally descriptive: no optimization policy should be promoted from shadow mode solely because an average improved on a small sample.
 
 ## Rollout
 
