@@ -89,6 +89,17 @@ function Assert-RunId {
   }
 }
 
+function Assert-ActiveState {
+  param(
+    [object]$State,
+    [string]$Operation
+  )
+
+  if ($State.status -ne "active") {
+    throw "Cannot $Operation resolution run in status '$($State.status)'."
+  }
+}
+
 function Get-StateFile {
   param(
     [string]$StateRoot,
@@ -217,7 +228,8 @@ function Update-ValidationOutcome {
   $latest = @{}
   foreach ($item in @($State.validations)) {
     if (-not [string]::IsNullOrWhiteSpace([string]$item.validator)) {
-      $latest[[string]$item.validator] = [string]$item.result
+      $validatorName = [string]$item.validator
+      $latest[$validatorName] = [string]$item.result
     }
   }
 
@@ -229,7 +241,8 @@ function Update-ValidationOutcome {
   if ($required.Count -gt 0) {
     $allRequiredPassed = $true
     foreach ($name in $required) {
-      if (-not $latest.ContainsKey([string]$name) -or $latest[[string]$name] -ne "pass") {
+      $requiredName = [string]$name
+      if (-not $latest.ContainsKey($requiredName) -or $latest[$requiredName] -ne "pass") {
         $allRequiredPassed = $false
         break
       }
@@ -349,9 +362,7 @@ switch ($Action) {
     }
 
     $state = Read-State -StateRoot $script:stateRoot -Id $RunId
-    if ($state.status -ne "active") {
-      throw "Cannot reserve budget for run in status '$($state.status)'."
-    }
+    Assert-ActiveState -State $state -Operation "reserve budget for"
 
     $limit = [int]$state.budget.limits.$BudgetType
     $usage = [int]$state.budget.usage.$BudgetType
@@ -407,6 +418,7 @@ switch ($Action) {
     }
 
     $state = Read-State -StateRoot $script:stateRoot -Id $RunId
+    Assert-ActiveState -State $state -Operation "commit budget for"
     $reservation = @($state.reservations | Where-Object { $_.id -eq $ReservationId }) | Select-Object -First 1
     if ($null -eq $reservation) {
       throw "Reservation not found: $ReservationId"
@@ -455,6 +467,7 @@ switch ($Action) {
     }
 
     $state = Read-State -StateRoot $script:stateRoot -Id $RunId
+    Assert-ActiveState -State $state -Operation "release budget for"
     $reservation = @($state.reservations | Where-Object { $_.id -eq $ReservationId }) | Select-Object -First 1
     if ($null -eq $reservation) {
       throw "Reservation not found: $ReservationId"
@@ -493,6 +506,7 @@ switch ($Action) {
     }
 
     $state = Read-State -StateRoot $script:stateRoot -Id $RunId
+    Assert-ActiveState -State $state -Operation "record evidence for"
     $entry = [pscustomobject][ordered]@{
       id = [guid]::NewGuid().ToString("N")
       timestamp = Get-UtcTimestamp
@@ -523,6 +537,7 @@ switch ($Action) {
     }
 
     $state = Read-State -StateRoot $script:stateRoot -Id $RunId
+    Assert-ActiveState -State $state -Operation "record LLM usage for"
     $call = [pscustomobject][ordered]@{
       id = [guid]::NewGuid().ToString("N")
       timestamp = Get-UtcTimestamp
@@ -562,6 +577,7 @@ switch ($Action) {
     }
 
     $state = Read-State -StateRoot $script:stateRoot -Id $RunId
+    Assert-ActiveState -State $state -Operation "validate"
     $entry = [pscustomobject][ordered]@{
       id = [guid]::NewGuid().ToString("N")
       timestamp = Get-UtcTimestamp
@@ -588,6 +604,7 @@ switch ($Action) {
   "escalate" {
     Assert-RunId -Id $RunId
     $state = Read-State -StateRoot $script:stateRoot -Id $RunId
+    Assert-ActiveState -State $state -Operation "escalate"
 
     $order = @("targeted", "balanced", "deep")
     $currentIndex = [Array]::IndexOf($order, [string]$state.strategy)
@@ -629,6 +646,7 @@ switch ($Action) {
   "complete" {
     Assert-RunId -Id $RunId
     $state = Read-State -StateRoot $script:stateRoot -Id $RunId
+    Assert-ActiveState -State $state -Operation "complete"
 
     if ($Completion -eq "failed") {
       $state.status = "failed"
