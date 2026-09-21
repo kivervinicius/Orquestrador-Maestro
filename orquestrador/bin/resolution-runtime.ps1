@@ -66,7 +66,7 @@ function Resolve-ConfiguredPath {
     throw "Configured runtime path is empty."
   }
 
-  $homeForText = [System.IO.Path]::GetFullPath($UserHome).TrimEnd("\", "/")
+  $homeForText = [System.IO.Path]::GetFullPath($UserHome).TrimEnd([char[]]@('\\', '/'))
   $resolved = $ConfiguredPath.Replace("{{USER_HOME}}", $homeForText)
   $resolved = $resolved.Replace("/", [System.IO.Path]::DirectorySeparatorChar)
   return [System.IO.Path]::GetFullPath($resolved)
@@ -142,7 +142,7 @@ function Append-LedgerEvent {
   }
 
   $line = $event | ConvertTo-Json -Depth 16 -Compress
-  Add-Content -LiteralPath $LedgerPath -Value $line -Encoding UTF8
+  [System.IO.File]::AppendAllText($LedgerPath, $line + [Environment]::NewLine, [System.Text.UTF8Encoding]::new($false))
 }
 
 function New-BudgetObject {
@@ -310,6 +310,8 @@ switch ($Action) {
       actual = $null
       status = "reserved"
       createdAt = Get-UtcTimestamp
+      committedAt = $null
+      releasedAt = $null
       notes = $Notes
     }
 
@@ -511,12 +513,11 @@ switch ($Action) {
     }
 
     $state.validations = @($state.validations) + $entry
-    if ($ValidationResult -eq "pass") {
-      $state.outcome.validated = $true
-    }
-    if ($ValidationResult -eq "soft-pass") {
-      $state.outcome.softValidated = $true
-    }
+    $hardPassCount = @($state.validations | Where-Object { $_.result -eq "pass" }).Count
+    $hardFailCount = @($state.validations | Where-Object { $_.result -eq "fail" }).Count
+    $softPassCount = @($state.validations | Where-Object { $_.result -eq "soft-pass" }).Count
+    $state.outcome.validated = ($hardPassCount -gt 0 -and $hardFailCount -eq 0)
+    $state.outcome.softValidated = ($softPassCount -gt 0 -and $hardFailCount -eq 0)
 
     Save-And-Log -State $state -EventType "validation-recorded" -Payload $entry
 
@@ -604,6 +605,7 @@ switch ($Action) {
       violations = $budgetStatus.violations
       evidenceCount = @($state.evidence).Count
       validationCount = @($state.validations).Count
+      openReservations = @($state.reservations | Where-Object { $_.status -eq "reserved" }).Count
     })
 
     [pscustomobject]@{
@@ -616,6 +618,7 @@ switch ($Action) {
       OutputTokens = [int]$state.budget.usage.outputTokens
       LlmCalls = [int]$state.budget.usage.llmCalls
       Escalations = [int]$state.budget.usage.escalations
+      OpenReservations = @($state.reservations | Where-Object { $_.status -eq "reserved" }).Count
       WithinBudget = $budgetStatus.withinBudget
     }
     break
