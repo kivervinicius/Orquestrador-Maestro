@@ -46,5 +46,23 @@
       "fail"
     ],
     "requireHardValidationForValidatedOutcome": true
+  },
+  "evidencePolicy": {
+    "version": 1,
+    "purpose": "Initial deterministic marginal-evidence heuristic. Version and measure before changing weights.",
+    "minimumPriorityScore": 0.12,
+    "tokenScale": 1000,
+    "weights": {
+      "relevance": 0.35,
+      "reliability": 0.15,
+      "freshness": 0.1,
+      "failureRelation": 0.25,
+      "dependencyProximity": 0.15
+    },
+    "maxCandidates": {
+      "targeted": 6,
+      "balanced": 15,
+      "deep": 30
+    }
   }
 }
