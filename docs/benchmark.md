@@ -718,3 +718,24 @@ Every `RunResult` written to disk follows this structure:
   "note": "Adequate sample size for directional comparison"
 }
 ```
+
+## Adaptive Resolution hard-evidence condition
+
+The benchmark harness reserves `maestro-adaptive` for the policy-bound Adaptive Resolution treatment. It is not an alias for `maestro-focus`.
+
+A matched hard-evidence pair uses the same scenario, fixture, model, driver family, and generated `pairId` for control `maestro` and treatment `maestro-adaptive`.
+
+Run through the top-level Maestro CLI so the runtime injects the canonical policy identity:
+
+```bash
+orquestrador-maestro benchmark adaptive-pair \
+  --scenario <scenario> \
+  --model <model>
+```
+
+The Maestro driver executes the real `go --auto` path. Adaptive confirmation and mission-usage markers are authenticated with a per-run nonce that is stripped from provider subprocess environments. Missing or mismatched confirmation is a `benchmark-integrity-violation`.
+
+Mission token totals are accepted only when every provider invocation in the Maestro process exposes complete fresh-session provider usage. Any incomplete or resumed invocation makes the end-to-end total unavailable rather than estimated. The evidence gate independently requires provider-reported tokens, external validation, reproducible inputs, container provenance, and isolation before a run can support a public efficiency claim.
+
+The dedicated adaptive command runs only the two conditions needed by the promotion dataset. Local runs remain analysis-only. Official promotion evidence requires container execution with daemon-issued container provenance; the checked-out Maestro runtime commit is recorded in the run report.
+

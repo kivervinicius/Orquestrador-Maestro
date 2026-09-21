@@ -15,7 +15,7 @@ export type RunStatus =
   | 'benchmark-integrity-violation';
 
 /** Experimental condition under which the run was executed. */
-export type Condition = 'vanilla' | 'maestro' | 'maestro-focus';
+export type Condition = 'vanilla' | 'maestro' | 'maestro-focus' | 'maestro-adaptive';
 
 /** Driver identity recorded in the run report. */
 export interface RunDriver {
@@ -49,6 +49,8 @@ export interface RunEnvironment {
   containerId?: string;
   /** Container network mode, if applicable. */
   networkMode?: 'none' | 'bridge' | 'host';
+  /** Names only (never values) of host env vars explicitly forwarded to the container. */
+  forwardedEnvNames?: string[];
   /** Container CPU limit, if applicable. */
   cpuLimit?: number;
   /** Container memory limit, if applicable. */
@@ -115,11 +117,11 @@ export interface RunEvidence {
   sessionFile?: string;
   /** How the run was executed (e.g. 'real-execution'). */
   executionType?: string;
-  /** True when scenario/fixture/task hashes were recorded (reproducible inputs). */
+  /** True when scenario/fixture/task hashes were recorded. */
   reproducible?: boolean;
-  /** True when the run executed in an isolated environment (container). */
+  /** True when the run executed in an isolated environment. */
   isolated?: boolean;
-  /** Pipeline assertion of public-claim eligibility (re-checked by isClaimEligibleRun). */
+  /** Pipeline assertion of public-claim eligibility; evidence gate re-checks it. */
   publicClaimEligible?: boolean;
 }
 
@@ -159,9 +161,9 @@ export interface BenchmarkRunReport {
   results: RunResults;
   /** Token usage. */
   tokens: TokenUsage;
-  /** Token provenance shortcut (mirrors tokens.tokenSource for the evidence gate). */
+  /** Token provenance shortcut used by the evidence gate. */
   usage?: { tokenSource?: string };
-  /** Explicit validation outcome (mirrors results.accepted for the evidence gate). */
+  /** Explicit external-validation outcome. */
   validation?: { passed?: boolean };
   /** Tool usage statistics (null if unavailable). */
   toolUsage?: import('../types/driver.js').ToolUsage | null;

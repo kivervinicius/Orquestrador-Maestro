@@ -94,8 +94,8 @@ Uso:
   orquestrador-maestro benchmark validate <scenario>
   orquestrador-maestro benchmark run [scenario] [opcoes]
   orquestrador-maestro run [--provider ID] [--profile ID] [--policy ID] [--workspace PATH] "tarefa"
-  orquestrador-maestro go [--auto] [--plan] [--provider ID] [--interviewer ID] [--project-path PATH] "tarefa"
-  orquestrador-maestro plan [--auto] [--plan] [--provider ID] [--interviewer ID] [--project-path PATH] "tarefa"
+  orquestrador-maestro go [--auto] [--plan] [--provider ID] [--model MODEL] [--interviewer ID] [--project-path PATH] "tarefa"
+  orquestrador-maestro plan [--auto] [--plan] [--provider ID] [--model MODEL] [--interviewer ID] [--project-path PATH] "tarefa"
   orquestrador-maestro runs [--project-path PATH]
   orquestrador-maestro usage [--project-path PATH] [--limit N] [--provider TOOL] [--model MODEL] [--branch BRANCH] [--project ID] [--json]
   orquestrador-maestro run show <id> [--project-path PATH]
@@ -253,6 +253,7 @@ function translateArgs(args, defs, target) {
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: options.cwd || rootDir,
+    env: options.env || process.env,
     stdio: "inherit",
     shell: false
   });
@@ -715,12 +716,12 @@ function runBenchmarkCommand(args) {
   if (subcommand === "list" && !rest.some((arg) => arg === "--dir" || arg.startsWith("--dir="))) {
     forwarded.push("--dir", path.join(rootDir, "benchmark-harness", "scenarios"));
   }
-  if (subcommand === "run") {
+  if (subcommand === "run" || subcommand === "pair" || subcommand === "adaptive-pair") {
     const scenario = getArg(rest, "--scenario");
-    const condition = getArg(rest, "--condition");
+    const condition = subcommand === "run" ? getArg(rest, "--condition") : null;
     if (scenario) forwarded.push("--scenario", resolveBenchmarkScenario(scenario));
     for (let index = 0; index < rest.length; index += 1) {
-      if (rest[index] === "--scenario" || rest[index] === "--condition") { index += 1; continue; }
+      if (rest[index] === "--scenario" || (subcommand === "run" && rest[index] === "--condition")) { index += 1; continue; }
       forwarded.push(rest[index]);
     }
     if (condition) forwarded.push("--condition", condition);
@@ -729,7 +730,17 @@ function runBenchmarkCommand(args) {
     if (scenario) forwarded.push("--scenario", resolveBenchmarkScenario(scenario));
     forwarded.push(...rest.filter((arg, index) => !(arg === scenario && index === rest.indexOf(scenario))));
   } else forwarded.push(...rest);
-  return run(process.execPath, ["--import", "tsx", path.join(rootDir, "benchmark-harness", "src", "cli", "index.ts"), ...forwarded], { cwd: rootDir });
+
+  const { POLICY_IDENTITIES } = require(path.join(rootDir, "runtime", "resolution", "policy-identity"));
+  const adaptiveIdentity = POLICY_IDENTITIES.PROGRESSIVE_PLANNING_V3;
+  const benchmarkEnv = {
+    ...process.env,
+    BENCHMARK_ADAPTIVE_POLICY_ID: adaptiveIdentity.id,
+    BENCHMARK_ADAPTIVE_POLICY_FINGERPRINT: adaptiveIdentity.fingerprint,
+    BENCHMARK_MAESTRO_VERSION: packageJson.version,
+    BENCHMARK_MAESTRO_BINARY: path.join(rootDir, "bin", "orquestrador-maestro.js")
+  };
+  return run(process.execPath, ["--import", "tsx", path.join(rootDir, "benchmark-harness", "src", "cli", "index.ts"), ...forwarded], { cwd: rootDir, env: benchmarkEnv });
 }
 
 function parseRuntimeArgs(args, allowed = [], booleanFlags = []) {
@@ -1609,7 +1620,7 @@ function handleVersionCommand(args) {
 }
 
 async function handleGoCommand(args, planningOnly = false) {
-  const options = parseRuntimeArgs(args, ["--project-path", "--provider", "--interviewer", "--max-cost", "--max-parallel", "--profile", "--interaction"], ["--auto", "--plan"]);
+  const options = parseRuntimeArgs(args, ["--project-path", "--provider", "--interviewer", "--model", "--max-cost", "--max-parallel", "--profile", "--interaction"], ["--auto", "--plan"]);
   const description = options.values.join(" ").trim();
   if (!description) throw new Error('Informe a intenção: orquestrador-maestro go "tarefa"');
 
@@ -1626,6 +1637,16 @@ async function handleGoCommand(args, planningOnly = false) {
 
   const workspacePath = path.resolve(options.projectPath || process.cwd());
   const app = await createRuntimeApplication(workspacePath);
+  const benchmarkMarkerNonce = process.env.MAESTRO_BENCHMARK_MARKER_NONCE || "";
+  let missionUsageMeter = null;
+  if (process.env.MAESTRO_BENCHMARK_USAGE === "1") {
+    if (!/^[A-Za-z0-9-]{16,128}$/u.test(benchmarkMarkerNonce)) {
+      throw new Error("BENCHMARK_MARKER_NONCE_INVALID: benchmark token metering requires an authenticated marker nonce");
+    }
+    const { MissionUsageMeter } = require(path.join(rootDir, "runtime", "telemetry", "mission-usage-meter"));
+    missionUsageMeter = new MissionUsageMeter();
+    missionUsageMeter.instrumentRegistry(app.providers);
+  }
 
   const p = require("@clack/prompts");
   const notifier = require("node-notifier");
@@ -1726,19 +1747,60 @@ async function handleGoCommand(args, planningOnly = false) {
     throw new Error("MISSING_EXECUTION_TARGET: No installed provider available for execution");
   }
 
+  const selectedModel = options.model || "default";
   const planner = new SemanticPlanner({
     application: app,
-    plannerTarget: { providerId: selectedProviderId, model: "default", local: selectedProviderId === "opencode" },
+    plannerTarget: { providerId: selectedProviderId, model: selectedModel, local: selectedProviderId === "opencode" },
     localOnly: selectedProviderId === "opencode"
   });
 
-  const planResult = await planner.plan({
-    missionBrief: approvedBrief,
-    missionId: approvedBrief.id,
-    taskRelevantContext: relevantContext,
-    resolvedSkills: resolved.allSkills,
-    allowFallback: true
-  });
+  const adaptivePolicyId = process.env.MAESTRO_ADAPTIVE_POLICY_ID || "";
+  const adaptivePolicyFingerprint = process.env.MAESTRO_ADAPTIVE_POLICY_FINGERPRINT || "";
+  const adaptivePairId = process.env.MAESTRO_ADAPTIVE_PAIR_ID || "";
+  const adaptiveRequested = Boolean(adaptivePolicyId || adaptivePolicyFingerprint || adaptivePairId);
+  let planResult;
+
+  if (adaptiveRequested) {
+    const { POLICY_IDENTITIES } = require(path.join(rootDir, "runtime", "resolution", "policy-identity"));
+    const { planProgressively } = require(path.join(rootDir, "runtime", "resolution", "progressive-planning"));
+    const expected = POLICY_IDENTITIES.PROGRESSIVE_PLANNING_V3;
+    if (adaptivePolicyId !== expected.id || adaptivePolicyFingerprint !== expected.fingerprint) {
+      throw new Error("ADAPTIVE_POLICY_IDENTITY_MISMATCH: benchmark policy identity does not match the runtime V3 contract");
+    }
+    if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(adaptivePairId)) {
+      throw new Error("ADAPTIVE_PAIR_ID_INVALID: a non-sensitive benchmark pairId is required");
+    }
+
+    planResult = await planProgressively({
+      contextEngine,
+      planner,
+      intent: description,
+      missionBrief: approvedBrief,
+      missionId: approvedBrief.id,
+      resolvedSkills: resolved.allSkills,
+      experiment: { authorized: true, pairId: adaptivePairId, startStrategy: "targeted" },
+      workspacePath
+    });
+
+    if (!benchmarkMarkerNonce) throw new Error("BENCHMARK_MARKER_NONCE_REQUIRED: adaptive benchmark confirmation requires a nonce");
+    console.log(`MAESTRO_ADAPTIVE_POLICY=${JSON.stringify({
+      nonce: benchmarkMarkerNonce,
+      policyId: expected.id,
+      policyFingerprint: expected.fingerprint,
+      pairId: adaptivePairId,
+      successStrategy: planResult.progressivePlanning?.successStrategy || null,
+      fallbackUsed: planResult.progressivePlanning?.fallbackUsed === true
+    })}`);
+  } else {
+    planResult = await planner.plan({
+      missionBrief: approvedBrief,
+      missionId: approvedBrief.id,
+      taskRelevantContext: relevantContext,
+      resolvedSkills: resolved.allSkills,
+      allowFallback: true,
+      workspacePath
+    });
+  }
 
   const { TaskGraphPersistence } = require(path.join(rootDir, "runtime", "planner", "task-graph-persistence"));
   const { PlanPersistenceHooks } = require(path.join(rootDir, "runtime", "planner", "plan-persistence-hooks"));
@@ -1754,7 +1816,7 @@ async function handleGoCommand(args, planningOnly = false) {
     })
   });
 
-  const executionTarget = { providerId: selectedProviderId, model: "default" };
+  const executionTarget = { providerId: selectedProviderId, model: selectedModel };
   let tasks = planResult.taskGraph.tasks.map((st) =>
     LegacyExecutionProjection.projectTask(st.metadata?.semantic || st, { executionTarget })
   );
@@ -1866,6 +1928,10 @@ async function handleGoCommand(args, planningOnly = false) {
   s.stop("Execução concluída");
 
   const failures = Object.values(results).filter((r) => r.status === "failed");
+
+  if (missionUsageMeter) {
+    console.log(`MAESTRO_MISSION_USAGE=${JSON.stringify({ nonce: benchmarkMarkerNonce, ...missionUsageMeter.snapshot() })}`);
+  }
 
   if (failures.length) {
     updateTitle("Concluído (com falhas)");

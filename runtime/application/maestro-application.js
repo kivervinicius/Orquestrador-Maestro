@@ -23,6 +23,7 @@ const { resolveInteractionProfile, interactionContract } = require("../interacti
 const { parseProviderUsage } = require("../telemetry/provider-usage");
 const { extractChildAgents } = require("../telemetry/agent-topology");
 const { buildCognitiveTelemetry } = require("../telemetry/cognitive-telemetry");
+const { buildMaestroPromptManifest, buildResolutionPlan, buildResolutionTelemetry } = require("../resolution");
 const { sanitizeDiagnostic } = require("../telemetry/diagnostic-sanitizer");
 const { resolveGitContext } = require("../../orquestrador/lib/git-context");
 
@@ -338,6 +339,11 @@ class MaestroApplication {
     const workspacePath = path.resolve(request.workspacePath || this.projectRoot);
     const projectId = request.projectId || projectIdForPath(workspacePath);
     const cognitiveBudget = evaluateCognitiveBudget({ ...(request.semanticTask || {}), changeClass: semanticChangeClass, risk: semanticRisk }, this.governance.cognitiveBudget);
+    const adaptiveResolution = buildResolutionPlan({
+      cognitiveBudget,
+      evidenceCandidates: Array.isArray(request.evidenceCandidates) ? request.evidenceCandidates : [],
+      mode: request.adaptiveResolutionMode || "shadow"
+    });
     const reviewPreflight = this.governance.features.independentReview && reviewRequired(cognitiveBudget)
       && (typeof provider.supportsReadOnlyReview !== "function" || !provider.supportsReadOnlyReview())
       ? "reviewer-capability-unavailable" : null;
@@ -351,6 +357,7 @@ class MaestroApplication {
       ...(request.semanticTask ? { semanticTask: request.semanticTask } : {}),
       ...(request.riskOverride ? { riskOverride: request.riskOverride } : {}),
       cognitiveBudget,
+      adaptiveResolution,
       ...(preflightBlock ? { preflightBlock } : {})
     };
     const task = core.createTask({ id: id("task"), description: request.description, projectId, createdAt: new Date().toISOString(), metadata: taskMetadata });
@@ -359,9 +366,24 @@ class MaestroApplication {
     await this.store.createProject({ id: projectId, path: workspacePath, name: path.basename(workspacePath), createdAt: new Date().toISOString() });
     await this.store.saveTask(task); await this.store.saveRun(run); await this.store.saveStep(step);
     await this.record(run.id, "run.created", { taskId: task.id, providerId: provider.id });
+    await this.record(run.id, "resolution.planned", {
+      mode: adaptiveResolution.mode,
+      strategy: adaptiveResolution.strategy,
+      evidenceCandidates: adaptiveResolution.evidenceAdvice.stats.inputCandidates,
+      evidenceSelected: adaptiveResolution.evidenceAdvice.stats.selectedCandidates,
+      contextBudgetOverflow: adaptiveResolution.evidenceAdvice.budgetOverflow
+    });
     if (preflightBlock) {
       const blockedTelemetryValue = blockedTelemetry({ budget: cognitiveBudget, projectId, workspacePath, reason: preflightBlock });
-      const blockedRun = { ...run, status: "blocked", completedAt: new Date().toISOString(), metadata: { ...run.metadata, preflightBlock, cognitiveTelemetry: blockedTelemetryValue } };
+      const blockedCognitiveTelemetry = {
+        ...blockedTelemetryValue,
+        resolution: buildResolutionTelemetry({
+          plan: adaptiveResolution,
+          cognitiveTelemetry: blockedTelemetryValue,
+          status: "blocked"
+        })
+      };
+      const blockedRun = { ...run, status: "blocked", completedAt: new Date().toISOString(), metadata: { ...run.metadata, preflightBlock, cognitiveTelemetry: blockedCognitiveTelemetry } };
       const blockedStep = { ...step, status: "failed", completedAt: blockedRun.completedAt };
       await this.store.saveRun(blockedRun); await this.store.saveStep(blockedStep);
       await this.record(run.id, "run.blocked", { reason: preflightBlock });
@@ -420,10 +442,11 @@ class MaestroApplication {
       interaction,
       includeGovernanceContext: this.governance.mode === "strict" || request.includeGovernanceContext === true
     });
+    const promptEnvelope = this.buildPromptEnvelope(executionPackage);
     let handle;
     let result;
     try {
-      handle = await provider.execute({ prompt: this.buildPrompt(executionPackage), workspacePath, model: request.model, sandbox: request.sandbox, permissionMode: request.permissionMode, mode: request.mode, agent: request.agent, sessionId: request.sessionId, continue: request.continue, timeoutMs: policy.timeoutMs, onEvent: (event) => this.record(run.id, event.type, event) });
+      handle = await provider.execute({ prompt: promptEnvelope.prompt, workspacePath, model: request.model, sandbox: request.sandbox, permissionMode: request.permissionMode, mode: request.mode, agent: request.agent, sessionId: request.sessionId, continue: request.continue, timeoutMs: policy.timeoutMs, onEvent: (event) => this.record(run.id, event.type, event) });
       this.activeRuns.set(run.id, handle);
       result = await handle.result;
     } catch (error) {
@@ -466,9 +489,23 @@ class MaestroApplication {
         completedAt,
         durationMs: failedStartedMs !== null && failedCompletedMs !== null ? Math.max(0, failedCompletedMs - failedStartedMs) : null,
         status: "failed",
-        childAgents: []
+        childAgents: [],
+        prompt: promptEnvelope.prompt,
+        contextDigests: {
+          maestroPrompt: promptEnvelope.manifest.promptHash,
+          maestroPromptManifest: promptEnvelope.manifest.manifestHash
+        }
       });
-      await this.store.saveRun({ ...run, status: "failed", completedAt, metadata: { ...run.metadata, cognitiveTelemetry: failedTelemetry } });
+      const failedCognitiveTelemetry = {
+        ...failedTelemetry,
+        resolution: buildResolutionTelemetry({
+          plan: run.metadata?.adaptiveResolution,
+          cognitiveTelemetry: failedTelemetry,
+          promptManifest: promptEnvelope.manifest,
+          status: "failed"
+        })
+      };
+      await this.store.saveRun({ ...run, status: "failed", completedAt, metadata: { ...run.metadata, cognitiveTelemetry: failedCognitiveTelemetry } });
       await this.record(run.id, "run.failed", { reason: cleanReason });
       return { run: await this.store.getRun(run.id), execution: { exitCode: 1, error: cleanReason }, verification: null, review: { status: "disabled", verdict: "not-requested", calls: 0 }, governanceWarnings: [], governanceBlocking: [], recommendations: [] };
     }
@@ -564,9 +601,25 @@ class MaestroApplication {
         durationMs: startedMs !== null && completedMs !== null ? Math.max(0, completedMs - startedMs) : null,
         status,
         childAgents,
-        prompt: null
+        prompt: promptEnvelope.prompt,
+        contextDigests: {
+          maestroPrompt: promptEnvelope.manifest.promptHash,
+          maestroPromptManifest: promptEnvelope.manifest.manifestHash
+        }
       });
-      await this.store.saveRun({ ...finalRun, metadata: { ...(finalRun.metadata || {}), cognitiveTelemetry: telemetry } });
+      const cognitiveTelemetry = {
+        ...telemetry,
+        resolution: buildResolutionTelemetry({
+          plan: finalRun.metadata?.adaptiveResolution,
+          cognitiveTelemetry: telemetry,
+          verification,
+          completion,
+          review,
+          promptManifest: promptEnvelope.manifest,
+          status
+        })
+      };
+      await this.store.saveRun({ ...finalRun, metadata: { ...(finalRun.metadata || {}), cognitiveTelemetry } });
     }
     return { run: await this.store.getRun(run.id), verification, qualityFindings, review, engineeringContract: executionPackage.engineeringContract, changes, execution: result, governanceWarnings: governance.warnings, governanceBlocking: governance.blocking, recommendations: governance.recommendations };
   }
@@ -687,13 +740,27 @@ class MaestroApplication {
     return brief;
   }
 
-  buildPrompt(executionPackage) {
+  buildPromptEnvelope(executionPackage) {
     const taskContext = compactContext(executionPackage.task, {
       files: [],
       skills: executionPackage.skills
     });
     const skillPaths = taskContext.skills.map((skill) => `- ${skill.identity}: ${skill.path}`).join("\n");
-    return [executionPackage.profile.instructions || `Act as ${executionPackage.profile.displayName}.`, interactionContract(executionPackage.interaction), `Task: ${taskContext.description}`, `Workspace: ${executionPackage.workspace.path}`, executionPackage.includeGovernanceContext ? `Engineering contract: ${JSON.stringify(executionPackage.engineeringContract)}` : "", skillPaths ? `Resolved skills:\n${skillPaths}` : "", "Work only within the workspace and report concrete changes."].filter(Boolean).join("\n\n");
+    const sections = [
+      { id: "profile", kind: "profile", content: executionPackage.profile.instructions || `Act as ${executionPackage.profile.displayName}.`, text: executionPackage.profile.instructions || `Act as ${executionPackage.profile.displayName}.` },
+      { id: "interaction", kind: "interaction", content: interactionContract(executionPackage.interaction), text: interactionContract(executionPackage.interaction) },
+      { id: "task", kind: "task", content: taskContext.description, text: `Task: ${taskContext.description}` },
+      { id: "workspace", kind: "workspace", content: executionPackage.workspace.path, text: `Workspace: ${executionPackage.workspace.path}` },
+      { id: "engineering-contract", kind: "governance", content: executionPackage.includeGovernanceContext ? JSON.stringify(executionPackage.engineeringContract) : "", text: executionPackage.includeGovernanceContext ? `Engineering contract: ${JSON.stringify(executionPackage.engineeringContract)}` : "" },
+      { id: "skills", kind: "skills", content: skillPaths, text: skillPaths ? `Resolved skills:\n${skillPaths}` : "" },
+      { id: "execution-boundary", kind: "instruction", content: "Work only within the workspace and report concrete changes.", text: "Work only within the workspace and report concrete changes." }
+    ].filter((section) => Boolean(section.text));
+    const prompt = sections.map((section) => section.text).join("\n\n");
+    return Object.freeze({ prompt, manifest: buildMaestroPromptManifest(sections) });
+  }
+
+  buildPrompt(executionPackage) {
+    return this.buildPromptEnvelope(executionPackage).prompt;
   }
 
   inferProjectVerification(workspacePath) {

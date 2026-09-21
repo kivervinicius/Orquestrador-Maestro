@@ -1,41 +1,45 @@
 "use strict";
 
 class ContextBudget {
-  /**
-   * Applies the budget constraint to the context items.
-   * Prioritizes USER_DECISION, high relevance, and high confidence.
-   * Does NOT just discard large files.
-   *
-   * Guarantee: priority order is filled until the cap; the single
-   * highest-priority item is always kept (never silently empty). When that
-   * item alone exceeds the cap, the overflow is explicit via a
-   * non-enumerable `overBudget` flag on the returned array (invisible to
-   * length/map/JSON, readable by callers that care).
-   *
-   * @param {Array} items - List of ContextItems.
-   * @param {number} maxTokens - The maximum allowed tokens (estimated).
-   * @returns {Array} The budgeted ContextItems.
-   */
-  static estimateCost(value) {
-    if (typeof value === "string") return Math.ceil(value.length / 4);
-    // Objects (e.g. a whole contextBrief) must be measured, not flat-rated:
-    // serialize and estimate like any other payload.
+  static serialize(value) {
+    if (typeof value === "string") return value;
     try {
-      const text = JSON.stringify(value) ?? "";
-      return Math.ceil(text.length / 4);
+      const serialized = JSON.stringify(value);
+      return serialized === undefined ? String(value ?? "") : serialized;
     } catch {
-      return 25;
+      return String(value ?? "");
     }
   }
 
-  static applyBudget(items, maxTokens = 8000) {
-    if (!Array.isArray(items)) return [];
+  static estimateSerializedTokens(value) {
+    const serialized = ContextBudget.serialize(value);
+    return Math.ceil(Buffer.byteLength(serialized, "utf8") / 4);
+  }
 
-    // Sort items by priority:
-    // 1. USER_DECISION always wins
-    // 2. High relevance
-    // 3. High confidence
-    // 4. Smaller token cost (simulated by string length for now)
+  static estimateCost(value) {
+    return ContextBudget.estimateSerializedTokens(value);
+  }
+
+  static estimateItemTokens(item) {
+    return ContextBudget.estimateSerializedTokens(item);
+  }
+
+  static estimateContextTokens(intent, items) {
+    return ContextBudget.estimateSerializedTokens({ intent, items });
+  }
+
+  /**
+   * Applies the budget using the same serialized envelope later consumed by
+   * SemanticPlanner. Priority order is filled until the cap. The single
+   * highest-priority item is always preserved so context is never silently
+   * empty; if that item alone exceeds the cap the returned array exposes a
+   * non-enumerable overBudget=true flag.
+   */
+  static applyBudget(items, maxTokens = 8000, { intent = "" } = {}) {
+    if (!Array.isArray(items)) return [];
+    if (!Number.isInteger(maxTokens) || maxTokens < 0) {
+      throw new TypeError("maxTokens must be a non-negative integer");
+    }
 
     const sorted = [...items].sort((a, b) => {
       if (a.kind === "USER_DECISION" && b.kind !== "USER_DECISION") return -1;
@@ -43,41 +47,30 @@ class ContextBudget {
 
       const relA = a.relevance !== undefined ? a.relevance : 1;
       const relB = b.relevance !== undefined ? b.relevance : 1;
-      if (relA !== relB) return relB - relA; // Descending relevance
+      if (relA !== relB) return relB - relA;
 
       const confA = a.confidence !== undefined ? a.confidence : 1;
       const confB = b.confidence !== undefined ? b.confidence : 1;
-      if (confA !== confB) return confB - confA; // Descending confidence
+      if (confA !== confB) return confB - confA;
 
-      // Secondary: string length cost
-      const lenA = ContextBudget.estimateCost(a.value) * 4;
-      const lenB = ContextBudget.estimateCost(b.value) * 4;
-      return lenA - lenB; // Ascending length
+      return ContextBudget.estimateItemTokens(a) - ContextBudget.estimateItemTokens(b);
     });
 
     const result = [];
-    let currentCost = 0;
-
     for (const item of sorted) {
-      // Estimate cost
-      const itemCost = 10 + ContextBudget.estimateCost(item.value); // base cost + value cost
-
-      // Critical facts keep priority order (sorted first) but still count
-      // against the budget: the loop stops once the cap is exceeded, except
-      // it always keeps the single highest-priority item so context is
-      // never silently empty.
-      if (currentCost + itemCost <= maxTokens || result.length === 0) {
+      const candidate = [...result, item];
+      const candidateCost = ContextBudget.estimateContextTokens(intent, candidate);
+      if (candidateCost <= maxTokens || result.length === 0) {
         result.push(item);
-        currentCost += itemCost;
       }
     }
 
+    const actualCost = ContextBudget.estimateContextTokens(intent, result);
     Object.defineProperty(result, "overBudget", {
-      value: currentCost > maxTokens,
+      value: actualCost > maxTokens,
       enumerable: false,
       writable: false
     });
-
     return result;
   }
 }
