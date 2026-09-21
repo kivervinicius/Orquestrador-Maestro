@@ -9,6 +9,11 @@ if (-not (Test-Path -LiteralPath $runtime)) {
   throw "Runtime script not found: $runtime"
 }
 
+$reportScript = Join-Path $repoRoot "orquestrador\bin\resolution-report.ps1"
+if (-not (Test-Path -LiteralPath $reportScript)) {
+  throw "Resolution report script not found: $reportScript"
+}
+
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("maestro-resolution-test-" + [guid]::NewGuid().ToString("N"))
 $home = Join-Path $tempRoot "home"
 New-Item -ItemType Directory -Force -Path $home | Out-Null
@@ -208,6 +213,11 @@ try {
   foreach ($line in $lines) {
     $line | ConvertFrom-Json | Out-Null
   }
+
+  $report = & $reportScript -LedgerPath $ledger
+  Assert-Equal -Actual $report.completedRuns -Expected 2 -Message "Resolution report completed run count mismatch"
+  Assert-Equal -Actual $report.validatedRuns -Expected 2 -Message "Resolution report validated run count mismatch"
+  Assert-Equal -Actual @($report.invalidLedgerLines).Count -Expected 0 -Message "Resolution report should not find invalid ledger lines"
 
   "Adaptive Resolution Runtime self-test passed."
 } finally {
