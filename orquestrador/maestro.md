@@ -19,10 +19,15 @@ Create and update durable project documentation under `DEV/` by default. After s
 
 ## Token Discipline
 
+- Optimize for cost to a validated outcome, not the smallest first prompt.
 - Prefer compact indexes over full catalogs.
+- Acquire evidence progressively; load more context only when it can materially change execution or validation.
 - Avoid loading every skill directory.
 - Avoid repeating long instructions across tools.
 - Keep entrypoint files short and stable.
+- Never trade required validation for lower token usage.
+
+When the Adaptive Resolution Runtime is available, use it in shadow mode for substantive work to measure evidence, budget, LLM usage, escalation, and validation. Shadow telemetry must not override the existing execution loop.
 
 ## Global Changes
 
