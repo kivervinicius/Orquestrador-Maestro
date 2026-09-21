@@ -49,7 +49,9 @@ Assert-Path -Path (Join-Path $orquestrador "maestro.md") -Label "Orquestrador ma
 Assert-Path -Path (Join-Path $orquestrador "PROJECT_DEV_HIERARCHY.md") -Label "Project DEV hierarchy"
 Assert-Path -Path (Join-Path $orquestrador "bin\init-project-dev.ps1") -Label "Project DEV initializer"
 Assert-Path -Path (Join-Path $orquestrador "RESOLUTION_RUNTIME.json") -Label "Adaptive Resolution Runtime config"
+Assert-Path -Path (Join-Path $orquestrador "EVIDENCE_CANDIDATE_SCHEMA.json") -Label "Evidence candidate schema"
 Assert-Path -Path (Join-Path $orquestrador "bin\resolution-runtime.ps1") -Label "Adaptive Resolution Runtime"
+Assert-Path -Path (Join-Path $orquestrador "bin\evidence-ranker.ps1") -Label "Evidence ranker"
 Assert-Path -Path (Join-Path $orquestrador "SKILLS_INDEX.md") -Label "Orquestrador skills index"
 Assert-Path -Path (Join-Path $orquestrador "SKILLS_ROUTER.json") -Label "Orquestrador skills router"
 Assert-Path -Path (Join-Path $orquestrador "skills") -Label "Orquestrador canonical skills"
@@ -70,6 +72,9 @@ if (Test-Path -LiteralPath $resolutionConfigPath) {
       if ($null -eq $resolutionConfig.strategies.$strategy) {
         Add-Issue "Adaptive Resolution Runtime config is missing strategy '$strategy': $resolutionConfigPath"
       }
+    }
+    if ($null -eq $resolutionConfig.evidencePolicy) {
+      Add-Issue "Adaptive Resolution Runtime config is missing evidencePolicy: $resolutionConfigPath"
     }
   } catch {
     Add-Issue "Adaptive Resolution Runtime config is not valid JSON: $resolutionConfigPath"
