@@ -57,7 +57,7 @@ start
   +--> complete
 ```
 
-A run is only marked `validated` after at least one hard validation result with `pass`. A `soft-pass` is recorded separately and does not become a hard validated outcome.
+A run is only marked `validated` when at least one hard validation has passed and no recorded hard validation has failed. A later `fail` revokes the validated state. A `soft-pass` is recorded separately and does not become a hard validated outcome.
 
 ## Example
 
@@ -114,6 +114,8 @@ reserve(estimated cost)
 
 This gives the future Evidence Engine a safe primitive for deciding whether additional information is worth acquiring.
 
+Evidence metadata and budget accounting are intentionally separate in V0: recording an `evidence` event does not consume the context budget by itself. The caller must reserve and commit the actual context cost. This avoids accidental double-counting.
+
 ## Ledger
 
 Every state-changing action also appends an event to the JSONL ledger. A state file is kept per run for fast inspection.
@@ -149,3 +151,7 @@ Money, latency, tool execution, retries, and provider-specific prices can be lay
 5. **V4 - Learned strategy policy:** train a small local classifier only after enough validated runs exist.
 
 The learned model is deliberately not the starting point. The runtime first creates the dataset needed to know whether a learned policy is actually better.
+
+## V0 Concurrency Boundary
+
+V0 assumes a single writer per resolution run. State replacement is atomic, but concurrent writers for the same `RunId` are not yet coordinated with a lock. This is acceptable for shadow telemetry, but `enforce` mode must not be enabled until per-run locking and atomic ledger coordination are implemented and tested.
