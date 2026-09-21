@@ -8,7 +8,9 @@ param(
   [string]$Task = "",
   [string]$TaskClass = "unknown",
   [string[]]$Acceptance = @(),
+  [string[]]$RequiredValidators = @(),
   [string]$Tool = "unknown",
+  [string]$Profile = "",
 
   [ValidateSet("targeted", "balanced", "deep")]
   [string]$Strategy = "targeted",
@@ -29,6 +31,9 @@ param(
 
   [int]$InputTokens = 0,
   [int]$OutputTokens = 0,
+  [string]$Provider = "",
+  [string]$Model = "",
+  [int]$DurationMs = 0,
 
   [string]$Validator = "",
   [ValidateSet("pass", "fail", "soft-pass", "unknown")]
@@ -206,6 +211,37 @@ function Get-BudgetStatus {
   }
 }
 
+function Update-ValidationOutcome {
+  param([object]$State)
+
+  $latest = @{}
+  foreach ($item in @($State.validations)) {
+    if (-not [string]::IsNullOrWhiteSpace([string]$item.validator)) {
+      $latest[[string]$item.validator] = [string]$item.result
+    }
+  }
+
+  $required = @($State.contract.requiredValidators | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
+  $failed = @($latest.Keys | Where-Object { $latest[$_] -eq "fail" })
+  $hardPassed = @($latest.Keys | Where-Object { $latest[$_] -eq "pass" })
+  $softPassed = @($latest.Keys | Where-Object { $latest[$_] -eq "soft-pass" })
+
+  if ($required.Count -gt 0) {
+    $allRequiredPassed = $true
+    foreach ($name in $required) {
+      if (-not $latest.ContainsKey([string]$name) -or $latest[[string]$name] -ne "pass") {
+        $allRequiredPassed = $false
+        break
+      }
+    }
+    $State.outcome.validated = ($allRequiredPassed -and $failed.Count -eq 0)
+  } else {
+    $State.outcome.validated = ($hardPassed.Count -gt 0 -and $failed.Count -eq 0)
+  }
+
+  $State.outcome.softValidated = ($softPassed.Count -gt 0 -and $failed.Count -eq 0)
+}
+
 function Save-And-Log {
   param(
     [object]$State,
@@ -219,6 +255,9 @@ function Save-And-Log {
 }
 
 $config = Get-RuntimeConfig
+if ([string]$config.mode -ne "shadow") {
+  throw "Adaptive Resolution Runtime V0 supports shadow mode only. Refusing mode '$($config.mode)'."
+}
 $script:stateRoot = Resolve-ConfiguredPath -ConfiguredPath $config.statePath -UserHome $HomePath
 $script:ledgerPath = Resolve-ConfiguredPath -ConfiguredPath $config.ledgerPath -UserHome $HomePath
 
@@ -228,7 +267,16 @@ switch ($Action) {
       throw "Task is required for action 'start'."
     }
 
-    $strategyConfig = Get-StrategyConfig -Config $config -Name $Strategy
+    $effectiveStrategy = $Strategy
+    if (-not [string]::IsNullOrWhiteSpace($Profile)) {
+      $mappedStrategy = $config.profileStrategyMap.$Profile
+      if ($null -eq $mappedStrategy) {
+        throw "Unknown execution profile for resolution mapping: $Profile"
+      }
+      $effectiveStrategy = [string]$mappedStrategy
+    }
+
+    $strategyConfig = Get-StrategyConfig -Config $config -Name $effectiveStrategy
     $id = $RunId
     if ([string]::IsNullOrWhiteSpace($id)) {
       $id = [guid]::NewGuid().ToString("N")
@@ -252,9 +300,11 @@ switch ($Action) {
         objective = $Task
         taskClass = $TaskClass
         acceptance = @($Acceptance)
+        requiredValidators = @($RequiredValidators)
         tool = $Tool
+        profile = $Profile
       }
-      strategy = $Strategy
+      strategy = $effectiveStrategy
       budget = New-BudgetObject -StrategyConfig $strategyConfig
       reservations = @()
       evidence = @()
@@ -266,22 +316,27 @@ switch ($Action) {
         validated = $false
         softValidated = $false
         completion = $null
+        completedAt = $null
+        durationMs = $null
       }
       notes = @()
     }
 
     Write-State -StateRoot $script:stateRoot -State $state
     Append-LedgerEvent -LedgerPath $script:ledgerPath -Id $id -EventType "run-started" -Payload ([pscustomobject]@{
-      strategy = $Strategy
+      strategy = $effectiveStrategy
       taskClass = $TaskClass
       tool = $Tool
+      profile = $Profile
+      requiredValidators = @($RequiredValidators)
       mode = [string]$config.mode
     })
 
     [pscustomobject]@{
       RunId = $id
       Mode = [string]$config.mode
-      Strategy = $Strategy
+      Strategy = $effectiveStrategy
+      Profile = $Profile
       Status = "active"
     }
     break
@@ -463,8 +518,8 @@ switch ($Action) {
 
   "llm" {
     Assert-RunId -Id $RunId
-    if ($InputTokens -lt 0 -or $OutputTokens -lt 0) {
-      throw "InputTokens and OutputTokens must be zero or greater."
+    if ($InputTokens -lt 0 -or $OutputTokens -lt 0 -or $DurationMs -lt 0) {
+      throw "InputTokens, OutputTokens, and DurationMs must be zero or greater."
     }
 
     $state = Read-State -StateRoot $script:stateRoot -Id $RunId
@@ -473,6 +528,9 @@ switch ($Action) {
       timestamp = Get-UtcTimestamp
       inputTokens = $InputTokens
       outputTokens = $OutputTokens
+      provider = $Provider
+      model = $Model
+      durationMs = $DurationMs
       notes = $Notes
     }
 
@@ -513,11 +571,7 @@ switch ($Action) {
     }
 
     $state.validations = @($state.validations) + $entry
-    $hardPassCount = @($state.validations | Where-Object { $_.result -eq "pass" }).Count
-    $hardFailCount = @($state.validations | Where-Object { $_.result -eq "fail" }).Count
-    $softPassCount = @($state.validations | Where-Object { $_.result -eq "soft-pass" }).Count
-    $state.outcome.validated = ($hardPassCount -gt 0 -and $hardFailCount -eq 0)
-    $state.outcome.softValidated = ($softPassCount -gt 0 -and $hardFailCount -eq 0)
+    Update-ValidationOutcome -State $state
 
     Save-And-Log -State $state -EventType "validation-recorded" -Payload $entry
 
@@ -594,6 +648,10 @@ switch ($Action) {
       $state.notes = @($state.notes) + $Notes
     }
 
+    $completedAt = Get-UtcTimestamp
+    $state.outcome.completedAt = $completedAt
+    $state.outcome.durationMs = [int64]([DateTimeOffset]::Parse($completedAt) - [DateTimeOffset]::Parse([string]$state.createdAt)).TotalMilliseconds
+
     $budgetStatus = Get-BudgetStatus -State $state
     Save-And-Log -State $state -EventType "run-completed" -Payload ([pscustomobject]@{
       status = $state.status
@@ -605,6 +663,8 @@ switch ($Action) {
       violations = $budgetStatus.violations
       evidenceCount = @($state.evidence).Count
       validationCount = @($state.validations).Count
+      requiredValidators = @($state.contract.requiredValidators)
+      durationMs = [int64]$state.outcome.durationMs
       openReservations = @($state.reservations | Where-Object { $_.status -eq "reserved" }).Count
     })
 
@@ -618,6 +678,7 @@ switch ($Action) {
       OutputTokens = [int]$state.budget.usage.outputTokens
       LlmCalls = [int]$state.budget.usage.llmCalls
       Escalations = [int]$state.budget.usage.escalations
+      DurationMs = [int64]$state.outcome.durationMs
       OpenReservations = @($state.reservations | Where-Object { $_.status -eq "reserved" }).Count
       WithinBudget = $budgetStatus.withinBudget
     }
