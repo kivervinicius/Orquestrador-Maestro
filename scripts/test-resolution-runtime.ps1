@@ -219,6 +219,10 @@ try {
   Assert-Equal -Actual $report.validatedRuns -Expected 2 -Message "Resolution report validated run count mismatch"
   Assert-Equal -Actual @($report.invalidLedgerLines).Count -Expected 0 -Message "Resolution report should not find invalid ledger lines"
 
+  $firstRunMetric = @($report.runs | Where-Object { $_.runId -eq $runId }) | Select-Object -First 1
+  Assert-Equal -Actual $firstRunMetric.tokensToValidatedOutcome -Expected 3400 -Message "TTVO should stop at the final validated transition"
+  Assert-Equal -Actual $report.firstPassValidatedRuns -Expected 1 -Message "Recovered validation failures must not count as first-pass success"
+
   "Adaptive Resolution Runtime self-test passed."
 } finally {
   if (Test-Path -LiteralPath $tempRoot) {
