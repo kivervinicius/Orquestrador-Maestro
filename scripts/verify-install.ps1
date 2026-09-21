@@ -48,6 +48,8 @@ Assert-Path -Path (Join-Path $orquestrador "rules.md") -Label "Orquestrador rule
 Assert-Path -Path (Join-Path $orquestrador "maestro.md") -Label "Orquestrador maestro"
 Assert-Path -Path (Join-Path $orquestrador "PROJECT_DEV_HIERARCHY.md") -Label "Project DEV hierarchy"
 Assert-Path -Path (Join-Path $orquestrador "bin\init-project-dev.ps1") -Label "Project DEV initializer"
+Assert-Path -Path (Join-Path $orquestrador "RESOLUTION_RUNTIME.json") -Label "Adaptive Resolution Runtime config"
+Assert-Path -Path (Join-Path $orquestrador "bin\resolution-runtime.ps1") -Label "Adaptive Resolution Runtime"
 Assert-Path -Path (Join-Path $orquestrador "SKILLS_INDEX.md") -Label "Orquestrador skills index"
 Assert-Path -Path (Join-Path $orquestrador "SKILLS_ROUTER.json") -Label "Orquestrador skills router"
 Assert-Path -Path (Join-Path $orquestrador "skills") -Label "Orquestrador canonical skills"
@@ -56,6 +58,23 @@ Assert-FileContains -Path (Join-Path $HomePath "AGENTS.md") -Pattern "DEV/" -Lab
 Assert-FileContains -Path (Join-Path $HomePath "AGENTS.md") -Pattern "DEV/WORKLOG\.md" -Label "Global AGENTS.md"
 Assert-FileContains -Path (Join-Path $orquestrador "rules.md") -Pattern "DEV/WORKLOG\.md" -Label "Orquestrador rules"
 Assert-FileContains -Path (Join-Path $orquestrador "PROJECT_DEV_HIERARCHY.md") -Pattern "DEV/WORKLOG\.md" -Label "Project DEV hierarchy"
+
+$resolutionConfigPath = Join-Path $orquestrador "RESOLUTION_RUNTIME.json"
+if (Test-Path -LiteralPath $resolutionConfigPath) {
+  try {
+    $resolutionConfig = Get-Content -LiteralPath $resolutionConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ([string]::IsNullOrWhiteSpace([string]$resolutionConfig.mode)) {
+      Add-Issue "Adaptive Resolution Runtime config does not declare mode: $resolutionConfigPath"
+    }
+    foreach ($strategy in @("targeted", "balanced", "deep")) {
+      if ($null -eq $resolutionConfig.strategies.$strategy) {
+        Add-Issue "Adaptive Resolution Runtime config is missing strategy '$strategy': $resolutionConfigPath"
+      }
+    }
+  } catch {
+    Add-Issue "Adaptive Resolution Runtime config is not valid JSON: $resolutionConfigPath"
+  }
+}
 
 Assert-Path -Path (Join-Path $codex "skills") -Label "Codex skills"
 Assert-Path -Path (Join-Path $codex "agents") -Label "Codex agents"
