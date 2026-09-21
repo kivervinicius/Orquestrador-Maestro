@@ -15,7 +15,7 @@ param(
   [ValidateSet("targeted", "balanced", "deep")]
   [string]$Strategy = "targeted",
 
-  [ValidateSet("contextTokens", "inputTokens", "outputTokens", "llmCalls", "escalations")]
+  [ValidateSet("contextTokens")]
   [string]$BudgetType = "contextTokens",
 
   [int]$Amount = 0,
@@ -589,7 +589,11 @@ switch ($Action) {
     $state.validations = @($state.validations) + $entry
     Update-ValidationOutcome -State $state
 
-    Save-And-Log -State $state -EventType "validation-recorded" -Payload $entry
+    Save-And-Log -State $state -EventType "validation-recorded" -Payload ([pscustomobject]@{
+      validation = $entry
+      validated = [bool]$state.outcome.validated
+      softValidated = [bool]$state.outcome.softValidated
+    })
 
     [pscustomobject]@{
       RunId = $RunId
