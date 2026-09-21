@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "mode": "shadow",
+  "purpose": "Adaptive Resolution Runtime configuration. Shadow mode measures cost-to-validated-outcome without blocking the current Maestro workflow.",
+  "ledgerPath": "{{USER_HOME}}/.orquestrador/logs/resolution-ledger.jsonl",
+  "statePath": "{{USER_HOME}}/.orquestrador/logs/resolution-runs",
+  "strategies": {
+    "targeted": {
+      "maxContextTokens": 5000,
+      "maxInputTokens": 8000,
+      "maxOutputTokens": 2500,
+      "maxLlmCalls": 1,
+      "maxEscalations": 1
+    },
+    "balanced": {
+      "maxContextTokens": 12000,
+      "maxInputTokens": 18000,
+      "maxOutputTokens": 5000,
+      "maxLlmCalls": 2,
+      "maxEscalations": 2
+    },
+    "deep": {
+      "maxContextTokens": 30000,
+      "maxInputTokens": 45000,
+      "maxOutputTokens": 10000,
+      "maxLlmCalls": 4,
+      "maxEscalations": 2
+    }
+  },
+  "profileStrategyMap": {
+    "fast": "targeted",
+    "standard": "targeted",
+    "deep": "deep",
+    "multiagent": "deep",
+    "saas": "balanced",
+    "security": "balanced"
+  },
+  "validation": {
+    "hardResults": [
+      "pass"
+    ],
+    "softResults": [
+      "soft-pass"
+    ],
+    "failureResults": [
+      "fail"
+    ],
+    "requireHardValidationForValidatedOutcome": true
+  }
+}
