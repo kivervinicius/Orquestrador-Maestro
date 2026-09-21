@@ -331,6 +331,7 @@ switch ($Action) {
         completion = $null
         completedAt = $null
         durationMs = $null
+        accountingComplete = $false
       }
       notes = @()
     }
@@ -675,6 +676,8 @@ switch ($Action) {
     $state.outcome.durationMs = [int64]([DateTimeOffset]::Parse($completedAt) - [DateTimeOffset]::Parse([string]$state.createdAt)).TotalMilliseconds
 
     $budgetStatus = Get-BudgetStatus -State $state
+    $openReservations = @($state.reservations | Where-Object { $_.status -eq "reserved" }).Count
+    $state.outcome.accountingComplete = ($openReservations -eq 0)
     Save-And-Log -State $state -EventType "run-completed" -Payload ([pscustomobject]@{
       status = $state.status
       validated = [bool]$state.outcome.validated
@@ -687,7 +690,8 @@ switch ($Action) {
       validationCount = @($state.validations).Count
       requiredValidators = @($state.contract.requiredValidators)
       durationMs = [int64]$state.outcome.durationMs
-      openReservations = @($state.reservations | Where-Object { $_.status -eq "reserved" }).Count
+      accountingComplete = [bool]$state.outcome.accountingComplete
+      openReservations = $openReservations
     })
 
     [pscustomobject]@{
@@ -701,7 +705,8 @@ switch ($Action) {
       LlmCalls = [int]$state.budget.usage.llmCalls
       Escalations = [int]$state.budget.usage.escalations
       DurationMs = [int64]$state.outcome.durationMs
-      OpenReservations = @($state.reservations | Where-Object { $_.status -eq "reserved" }).Count
+      AccountingComplete = [bool]$state.outcome.accountingComplete
+      OpenReservations = $openReservations
       WithinBudget = $budgetStatus.withinBudget
     }
     break
