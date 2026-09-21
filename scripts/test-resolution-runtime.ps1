@@ -94,6 +94,42 @@ try {
   Assert-Equal -Actual $completed.OutputTokens -Expected 500 -Message "Output token usage mismatch"
   Assert-Equal -Actual $completed.LlmCalls -Expected 1 -Message "LLM call count mismatch"
 
+  $validationRegression = & $runtime `
+    -Action start `
+    -Task "Validation regression check" `
+    -TaskClass "test" `
+    -Tool "self-test" `
+    -Strategy targeted `
+    -HomePath $home
+
+  & $runtime `
+    -Action validate `
+    -RunId $validationRegression.RunId `
+    -Validator "first-check" `
+    -ValidationResult pass `
+    -HomePath $home | Out-Null
+
+  & $runtime `
+    -Action validate `
+    -RunId $validationRegression.RunId `
+    -Validator "regression-check" `
+    -ValidationResult fail `
+    -HomePath $home | Out-Null
+
+  $validationState = & $runtime `
+    -Action show `
+    -RunId $validationRegression.RunId `
+    -HomePath $home
+
+  Assert-Equal -Actual $validationState.outcome.validated -Expected $false -Message "A later hard validation failure must revoke validated state"
+
+  $validationCompleted = & $runtime `
+    -Action complete `
+    -RunId $validationRegression.RunId `
+    -HomePath $home
+
+  Assert-Equal -Actual $validationCompleted.Status -Expected "completed-unvalidated" -Message "Run with a hard validation failure must not complete as validated"
+
   $over = & $runtime `
     -Action start `
     -Task "Shadow over-budget check" `
