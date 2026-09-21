@@ -25,6 +25,24 @@ function Assert-Equal {
   }
 }
 
+function Assert-Throws {
+  param(
+    [scriptblock]$ScriptBlock,
+    [string]$Message
+  )
+
+  $threw = $false
+  try {
+    & $ScriptBlock
+  } catch {
+    $threw = $true
+  }
+
+  if (-not $threw) {
+    throw $Message
+  }
+}
+
 try {
   $started = & $runtime `
     -Action start `
@@ -98,6 +116,15 @@ try {
   Assert-Equal -Actual $completed.InputTokens -Expected 2000 -Message "Input token usage mismatch"
   Assert-Equal -Actual $completed.OutputTokens -Expected 500 -Message "Output token usage mismatch"
   Assert-Equal -Actual $completed.LlmCalls -Expected 1 -Message "LLM call count mismatch"
+
+  Assert-Throws -Message "Completed runs must reject further validation writes" -ScriptBlock {
+    & $runtime `
+      -Action validate `
+      -RunId $runId `
+      -Validator "late-check" `
+      -ValidationResult pass `
+      -HomePath $home | Out-Null
+  }
 
   $validationRegression = & $runtime `
     -Action start `
