@@ -22,6 +22,7 @@ Create and update durable project documentation under `DEV/` by default. After s
 - Optimize for cost to a validated outcome, not the smallest first prompt.
 - Prefer compact indexes over full catalogs.
 - Acquire evidence progressively; load more context only when it can materially change execution or validation.
+- Prefer measured or deterministic evidence signals; do not fabricate scores merely to satisfy the optimizer.
 - Avoid loading every skill directory.
 - Avoid repeating long instructions across tools.
 - Keep entrypoint files short and stable.
