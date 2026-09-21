@@ -14,6 +14,19 @@ Before broad work:
 6. Select only the skills needed for the task.
 7. Avoid loading full catalogs unless doing inventory or diagnostics.
 
+## Adaptive Resolution Shadow Hook
+
+For substantive work, when `{{USER_HOME}}/.orquestrador/bin/resolution-runtime.ps1` exists:
+
+1. Start a resolution run in the strategy mapped by `RESOLUTION_RUNTIME.json`.
+2. Record evidence that was actually opened or acquired; never invent relevance, token, latency, or provider metrics.
+3. Record LLM token usage only when the active tool exposes measured usage.
+4. Record the validation result before completing the run.
+5. Keep the runtime in `shadow` mode: budget violations are telemetry and must not block the existing Maestro workflow.
+6. Keep resolution state and ledgers local under `{{USER_HOME}}/.orquestrador/logs`; never publish them.
+
+The shadow hook measures cost-to-validated-outcome. It does not replace skill routing, project memory, context selection, or verification.
+
 ## Verification Hook
 
 Before claiming completion:
