@@ -44,6 +44,7 @@ function Get-RunAccumulator {
       candidateValidatedTokens = $null
       candidateValidatedAt = $null
       hadBudgetPressure = $false
+      hadValidationFailure = $false
     }
   }
   return $Map[$RunId]
@@ -100,6 +101,11 @@ foreach ($line in Get-Content -LiteralPath $LedgerPath -Encoding UTF8) {
     }
 
     "validation-recorded" {
+      $validationResult = if ($null -ne $event.payload.validation) { [string]$event.payload.validation.result } else { [string]$event.payload.result }
+      if ($validationResult -eq "fail") {
+        $acc.hadValidationFailure = $true
+      }
+
       $isValidated = $false
       if ($null -ne $event.payload.validated) {
         $isValidated = [bool]$event.payload.validated
@@ -162,6 +168,7 @@ foreach ($line in Get-Content -LiteralPath $LedgerPath -Encoding UTF8) {
         completionDurationMs = if ($null -ne $event.payload.durationMs) { [int64]$event.payload.durationMs } else { $null }
         withinFinalBudget = $withinFinalBudget
         hadBudgetPressure = [bool]$acc.hadBudgetPressure
+        hadValidationFailure = [bool]$acc.hadValidationFailure
         budgetHealthy = ($withinFinalBudget -and -not [bool]$acc.hadBudgetPressure)
         evidenceCount = [int]$event.payload.evidenceCount
         validationCount = [int]$event.payload.validationCount
@@ -175,7 +182,7 @@ foreach ($line in Get-Content -LiteralPath $LedgerPath -Encoding UTF8) {
 $validatedRuns = @($completed | Where-Object { $_.validated })
 $withEscalation = @($completed | Where-Object { $_.escalations -gt 0 })
 $budgetHealthy = @($completed | Where-Object { $_.budgetHealthy })
-$firstPass = @($completed | Where-Object { $_.validated -and $_.llmCalls -le 1 -and $_.escalations -eq 0 })
+$firstPass = @($completed | Where-Object { $_.validated -and -not $_.hadValidationFailure -and $_.llmCalls -le 1 -and $_.escalations -eq 0 })
 
 $byStrategy = @()
 foreach ($strategy in @("targeted", "balanced", "deep")) {
