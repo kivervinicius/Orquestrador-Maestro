@@ -31,11 +31,13 @@ try {
     -Task "Fix Google authentication regression" `
     -TaskClass "bugfix" `
     -Acceptance @("typecheck passes", "auth test passes") `
+    -RequiredValidators @("typecheck+auth-test") `
     -Tool "self-test" `
-    -Strategy targeted `
+    -Profile standard `
     -HomePath $home
 
   $runId = [string]$started.RunId
+  Assert-Equal -Actual $started.Strategy -Expected "targeted" -Message "Standard profile should map to targeted strategy"
   if ([string]::IsNullOrWhiteSpace($runId)) {
     throw "Runtime did not return a RunId."
   }
@@ -73,6 +75,9 @@ try {
     -RunId $runId `
     -InputTokens 2000 `
     -OutputTokens 500 `
+    -Provider "self-test" `
+    -Model "fake-model" `
+    -DurationMs 120 `
     -Notes "targeted repair" `
     -HomePath $home | Out-Null
 
@@ -98,6 +103,7 @@ try {
     -Action start `
     -Task "Validation regression check" `
     -TaskClass "test" `
+    -RequiredValidators @("regression-check") `
     -Tool "self-test" `
     -Strategy targeted `
     -HomePath $home
@@ -105,7 +111,7 @@ try {
   & $runtime `
     -Action validate `
     -RunId $validationRegression.RunId `
-    -Validator "first-check" `
+    -Validator "regression-check" `
     -ValidationResult pass `
     -HomePath $home | Out-Null
 
@@ -123,12 +129,26 @@ try {
 
   Assert-Equal -Actual $validationState.outcome.validated -Expected $false -Message "A later hard validation failure must revoke validated state"
 
+  & $runtime `
+    -Action validate `
+    -RunId $validationRegression.RunId `
+    -Validator "regression-check" `
+    -ValidationResult pass `
+    -HomePath $home | Out-Null
+
+  $validationRecovered = & $runtime `
+    -Action show `
+    -RunId $validationRegression.RunId `
+    -HomePath $home
+
+  Assert-Equal -Actual $validationRecovered.outcome.validated -Expected $true -Message "A later successful rerun of the required validator should restore validated state"
+
   $validationCompleted = & $runtime `
     -Action complete `
     -RunId $validationRegression.RunId `
     -HomePath $home
 
-  Assert-Equal -Actual $validationCompleted.Status -Expected "completed-unvalidated" -Message "Run with a hard validation failure must not complete as validated"
+  Assert-Equal -Actual $validationCompleted.Status -Expected "validated" -Message "Recovered required validation should complete as validated"
 
   $over = & $runtime `
     -Action start `
