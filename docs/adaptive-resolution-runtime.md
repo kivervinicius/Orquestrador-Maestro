@@ -21,7 +21,10 @@ The current skill router, memory conventions, and context workflow remain author
 
 - `orquestrador/RESOLUTION_RUNTIME.json`: runtime mode, storage paths, initial strategy budgets, and validation policy.
 - `orquestrador/bin/resolution-runtime.ps1`: local append-only resolution runtime.
-- `scripts/test-resolution-runtime.ps1`: dependency-free smoke test.
+- `orquestrador/bin/evidence-ranker.ps1`: deterministic marginal-evidence ranker used to compare information value against token cost.
+- `orquestrador/EVIDENCE_CANDIDATE_SCHEMA.json`: contract for candidate evidence supplied by integrations.
+- `scripts/test-resolution-runtime.ps1`: dependency-free runtime smoke test.
+- `scripts/test-evidence-ranker.ps1`: dependency-free evidence selection smoke test.
 - each LLM event may record provider, model, input/output tokens, and measured duration when the active tool exposes them.
 - local state: `%USERPROFILE%\.orquestrador\logs\resolution-runs\*.json`.
 - local event ledger: `%USERPROFILE%\.orquestrador\logs\resolution-ledger.jsonl`.
@@ -119,6 +122,36 @@ This gives the future Evidence Engine a safe primitive for deciding whether addi
 
 Evidence metadata and budget accounting are intentionally separate in V0: recording an `evidence` event does not consume the context budget by itself. The caller must reserve and commit the actual context cost. This avoids accidental double-counting.
 
+## Evidence Ranking
+
+V0 also includes the first deterministic optimizer primitive. Integrations can provide candidate evidence using `EVIDENCE_CANDIDATE_SCHEMA.json`. The ranker computes a versioned initial heuristic from:
+
+- relevance;
+- reliability;
+- freshness;
+- relation to the observed failure;
+- dependency proximity;
+- estimated token cost.
+
+The current policy deliberately uses explicit weights from `RESOLUTION_RUNTIME.json`. They are a baseline to measure, not a claim that the weights are universally optimal.
+
+Conceptually:
+
+```text
+information value =
+  weighted evidence signals
+
+cost factor =
+  1 / (1 + estimated tokens / token scale)
+
+priority =
+  information value * cost factor
+```
+
+Before selection, candidates are deduplicated by `contentHash` when available and by source otherwise. Required evidence is retained even when it overflows a strategy budget; the result explicitly reports `budgetOverflow`. Optional evidence is added in priority order only while it fits the strategy's context budget and candidate limit.
+
+The ranker does **not** invent candidate signals. A caller must provide measured or deterministic signals. Until trustworthy collectors exist, the ranker's output remains advisory in shadow mode.
+
 ## Ledger
 
 Every state-changing action also appends an event to the JSONL ledger. A state file is kept per run for fast inspection.
@@ -148,7 +181,7 @@ Money, latency, tool execution, retries, and provider-specific prices can be lay
 ## Rollout
 
 1. **V0 - Shadow telemetry:** record current behavior; do not block it.
-2. **V1 - Evidence ranking:** score candidate evidence and compare against what the current flow loaded.
+2. **V1 - Evidence ranking:** implemented as a deterministic shadow ranker; next measure its recommendations against what the current flow actually loaded.
 3. **V2 - Progressive context:** acquire high-value evidence first with budget gates.
 4. **V3 - Progressive escalation:** targeted -> balanced -> deep based on failed validation or missing evidence.
 5. **V4 - Learned strategy policy:** train a small local classifier only after enough validated runs exist.
