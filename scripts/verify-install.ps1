@@ -52,6 +52,7 @@ Assert-Path -Path (Join-Path $orquestrador "RESOLUTION_RUNTIME.json") -Label "Ad
 Assert-Path -Path (Join-Path $orquestrador "EVIDENCE_CANDIDATE_SCHEMA.json") -Label "Evidence candidate schema"
 Assert-Path -Path (Join-Path $orquestrador "bin\resolution-runtime.ps1") -Label "Adaptive Resolution Runtime"
 Assert-Path -Path (Join-Path $orquestrador "bin\evidence-ranker.ps1") -Label "Evidence ranker"
+Assert-Path -Path (Join-Path $orquestrador "bin\resolution-report.ps1") -Label "Resolution metrics report"
 Assert-Path -Path (Join-Path $orquestrador "SKILLS_INDEX.md") -Label "Orquestrador skills index"
 Assert-Path -Path (Join-Path $orquestrador "SKILLS_ROUTER.json") -Label "Orquestrador skills router"
 Assert-Path -Path (Join-Path $orquestrador "skills") -Label "Orquestrador canonical skills"
