@@ -22,6 +22,7 @@ The current skill router, memory conventions, and context workflow remain author
 - `orquestrador/RESOLUTION_RUNTIME.json`: runtime mode, storage paths, initial strategy budgets, and validation policy.
 - `orquestrador/bin/resolution-runtime.ps1`: local append-only resolution runtime.
 - `scripts/test-resolution-runtime.ps1`: dependency-free smoke test.
+- each LLM event may record provider, model, input/output tokens, and measured duration when the active tool exposes them.
 - local state: `%USERPROFILE%\.orquestrador\logs\resolution-runs\*.json`.
 - local event ledger: `%USERPROFILE%\.orquestrador\logs\resolution-ledger.jsonl`.
 
@@ -38,6 +39,8 @@ The V0 understands three bounded strategy levels:
 | `deep` | Allow high-cost investigation only when the task or escalation requires it. |
 
 These are budget envelopes, not claims about task quality. In shadow mode an over-budget reservation is recorded and flagged, but execution is not blocked.
+
+Existing Maestro execution profiles can be passed to the runtime and are mapped through `profileStrategyMap`. This keeps the experiment aligned with the current `fast`, `standard`, `deep`, `multiagent`, `saas`, and `security` profiles instead of creating a competing routing taxonomy.
 
 ## Resolution Lifecycle
 
@@ -57,7 +60,7 @@ start
   +--> complete
 ```
 
-A run is only marked `validated` when at least one hard validation has passed and no recorded hard validation has failed. A later `fail` revokes the validated state. A `soft-pass` is recorded separately and does not become a hard validated outcome.
+A run can declare `requiredValidators` in its resolution contract. When they are present, every required validator must have `pass` as its latest result and no validator may have a latest `fail`. A validator can fail and later recover after a successful rerun. Without required validators, at least one latest hard result must pass and none may fail. A `soft-pass` never becomes a hard validated outcome.
 
 ## Example
 
