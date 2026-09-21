@@ -20,10 +20,11 @@ For substantive work, when `{{USER_HOME}}/.orquestrador/bin/resolution-runtime.p
 
 1. Start a resolution run in the strategy mapped by `RESOLUTION_RUNTIME.json`.
 2. Record evidence that was actually opened or acquired; never invent relevance, token, latency, or provider metrics.
-3. Record LLM token usage only when the active tool exposes measured usage.
-4. Record the validation result before completing the run.
-5. Keep the runtime in `shadow` mode: budget violations are telemetry and must not block the existing Maestro workflow.
-6. Keep resolution state and ledgers local under `{{USER_HOME}}/.orquestrador/logs`; never publish them.
+3. When an integration can produce evidence candidates from measured or deterministic signals, pass them through `bin/evidence-ranker.ps1` before opening optional context. In shadow mode its selection is advisory only.
+4. Record LLM token usage only when the active tool exposes measured usage.
+5. Record the validation result before completing the run.
+6. Keep the runtime in `shadow` mode: budget violations are telemetry and must not block the existing Maestro workflow.
+7. Keep resolution state and ledgers local under `{{USER_HOME}}/.orquestrador/logs`; never publish them.
 
 The shadow hook measures cost-to-validated-outcome. It does not replace skill routing, project memory, context selection, or verification.
 
