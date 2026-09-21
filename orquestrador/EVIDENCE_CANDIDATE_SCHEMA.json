@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maestro.local/schemas/evidence-candidates.schema.json",
+  "title": "Maestro Evidence Candidates",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "kind",
+      "source",
+      "estimatedTokens",
+      "relevance",
+      "reliability",
+      "freshness",
+      "failureRelation",
+      "dependencyProximity"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "kind": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source": {
+        "type": "string",
+        "minLength": 1
+      },
+      "contentHash": {
+        "type": "string"
+      },
+      "required": {
+        "type": "boolean",
+        "default": false
+      },
+      "estimatedTokens": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "relevance": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "reliability": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "freshness": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "failureRelation": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "dependencyProximity": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "additionalProperties": true
+  }
+}
