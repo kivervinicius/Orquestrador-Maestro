@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
-const { SkillRouterV3, routingSignalSummary } = require("../skill-router-v3");
+const { SkillRouterV3, negativeRouteMatches, routingSignalSummary } = require("../skill-router-v3");
 
 function writeJson(root, name, value) {
   fs.writeFileSync(path.join(root, name), JSON.stringify(value, null, 2), "utf8");
@@ -93,7 +93,7 @@ test("canonical useWhen routing is used instead of Router v2 triggers", () => {
 test("negative routing rejects a candidate", () => {
   const root = fixture();
   const router = new SkillRouterV3({ maestroRoot: root });
-  const result = router.resolve("auditoria final de acessibilidade sem nova direção visual");
+  const result = router.resolve("frontend-design auditoria final de acessibilidade sem nova direção visual");
   assert.notEqual(result.primarySkill?.id, "skill-open-design-ui");
   assert.ok(result.rejected.some((item) => item.id === "skill-open-design-ui" && item.reason === "negative-routing"));
 });
@@ -167,4 +167,29 @@ test("stack, changed files and verified memory only refine an existing candidate
   assert.equal(signals.memoryHint, true);
   assert.deepEqual(signals.missingContext, ["design-system"]);
   assert.ok(signals.bonus > 0);
+});
+
+
+test("generic word overlap does not trigger negative routing", () => {
+  assert.equal(
+    negativeRouteMatches(
+      "pesquisar e sintetizar fontes atuais",
+      "Pesquisa que não exige fontes atuais ou síntese comparativa."
+    ),
+    false
+  );
+  assert.equal(
+    negativeRouteMatches(
+      "criar uma skill nova para o Maestro",
+      "Uso de uma skill existente para resolver a tarefa final."
+    ),
+    false
+  );
+  assert.equal(
+    negativeRouteMatches(
+      "auditoria final de acessibilidade sem nova direção visual",
+      "Auditoria final de acessibilidade sem nova direção visual."
+    ),
+    true
+  );
 });
