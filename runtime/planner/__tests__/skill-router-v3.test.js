@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
-const { SkillRouterV3 } = require("../skill-router-v3");
+const { SkillRouterV3, routingSignalSummary } = require("../skill-router-v3");
 
 function writeJson(root, name, value) {
   fs.writeFileSync(path.join(root, name), JSON.stringify(value, null, 2), "utf8");
@@ -144,4 +144,26 @@ test("fan-out orchestration skill is rejected when Complexity Gate does not allo
   assert.ok(result.rejected.some((item) =>
     item.id === "skill-multiagent-orchestration" && item.reason === "complexity-no-fanout"
   ));
+});
+
+test("stack, changed files and verified memory only refine an existing candidate", () => {
+  const record = {
+    id: "skill-open-design-ui",
+    contract: {
+      capabilities: ["frontend"],
+      context: { required: ["design-system"] }
+    }
+  };
+  const signals = routingSignalSummary(record, {
+    stackCapabilities: ["frontend"],
+    scopeCapabilities: ["frontend"],
+    memorySkillHints: ["skill-open-design-ui"],
+    availableContext: []
+  });
+
+  assert.deepEqual(signals.stackMatches, ["frontend"]);
+  assert.deepEqual(signals.scopeMatches, ["frontend"]);
+  assert.equal(signals.memoryHint, true);
+  assert.deepEqual(signals.missingContext, ["design-system"]);
+  assert.ok(signals.bonus > 0);
 });
