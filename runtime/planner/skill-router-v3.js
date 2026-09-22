@@ -72,19 +72,27 @@ function tokenize(value) {
     .filter((token) => token.length >= 3);
 }
 
+const NEGATIVE_ROUTING_STOPWORDS = new Set([
+  "uma", "uns", "umas", "para", "com", "sem", "que", "nao",
+  "the", "and", "for", "with", "without", "use", "usar", "skill"
+]);
+
 function negativeRouteMatches(intent, phrase) {
   const text = normalizeText(intent);
   const negative = normalizeText(phrase);
   if (!negative) return false;
   if (text.includes(negative) || negative.includes(text)) return true;
 
-  const left = new Set(tokenize(intent));
-  const right = new Set(tokenize(phrase));
+  const meaningfulTokens = (value) => tokenize(value)
+    .filter((token) => !NEGATIVE_ROUTING_STOPWORDS.has(token));
+
+  const left = new Set(meaningfulTokens(intent));
+  const right = new Set(meaningfulTokens(phrase));
   if (left.size === 0 || right.size === 0) return false;
 
   let overlap = 0;
   for (const token of left) if (right.has(token)) overlap += 1;
-  return overlap >= 2 && overlap / Math.min(left.size, right.size) >= 0.5;
+  return overlap >= 3 && overlap / Math.min(left.size, right.size) >= 0.75;
 }
 
 function strongestEvidence(evidence) {
@@ -469,6 +477,7 @@ module.exports = {
   FANOUT_ORCHESTRATION_SKILLS,
   CONTEXT_COST_ESTIMATES,
   EVIDENCE_WEIGHT,
+  NEGATIVE_ROUTING_STOPWORDS,
   SkillRouterV3,
   negativeRouteMatches,
   normalizeText,
