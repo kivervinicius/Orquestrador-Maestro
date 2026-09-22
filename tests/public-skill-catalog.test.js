@@ -10,9 +10,9 @@ const ROOT = path.resolve(__dirname, "..");
 
 test("public catalog is deterministic and deduplicated", () => {
   const catalog = buildCatalog(ROOT);
-  assert.equal(catalog.counts.uniqueSkills, 76);
-  assert.equal(catalog.counts.sourceSkillFiles, 179);
-  assert.equal(catalog.skills.length, 76);
+  const persisted = JSON.parse(fs.readFileSync(path.join(ROOT, "skill-library", "PUBLIC_SKILLS_MANIFEST.json"), "utf8"));
+  assert.deepEqual(catalog.counts, persisted.counts);
+  assert.equal(catalog.skills.length, catalog.counts.uniqueSkills);
   assert.equal(catalog.counts.conflictingIds, 0);
   assert.deepEqual(catalog.conflicts, []);
   assert.ok(catalog.skills.every((skill) => !skill.relativePath.includes("cache")));
@@ -25,5 +25,8 @@ test("router exposes every public non-canonical skill", () => {
   const canonical = new Set(Object.keys(router.skills || {}));
   const missing = catalog.skills.filter((skill) => !canonical.has(skill.id) && !router.librarySkills?.[skill.id]);
   assert.deepEqual(missing, []);
-  assert.equal(Object.keys(router.skills || {}).length + Object.keys(router.librarySkills || {}).length, 76);
+  assert.equal(
+    Object.keys(router.skills || {}).length + Object.keys(router.librarySkills || {}).length,
+    catalog.counts.uniqueSkills
+  );
 });

@@ -32,10 +32,15 @@ test("published package carries the public catalog and refreshes its installed i
   const powershellInstaller = fs.readFileSync(path.join(ROOT, "scripts", "install.ps1"), "utf8");
   const shellInstaller = fs.readFileSync(path.join(ROOT, "scripts", "install.sh"), "utf8");
   const publicManifest = JSON.parse(fs.readFileSync(path.join(ROOT, "skill-library", "PUBLIC_SKILLS_MANIFEST.json"), "utf8"));
+  const libraryManifest = JSON.parse(fs.readFileSync(path.join(ROOT, "skill-library", "MANIFEST.json"), "utf8"));
 
   assert.ok(packageJson.files.includes("codex/skills/"));
   assert.ok(packageJson.files.includes("skill-library/PUBLIC_SKILLS_MANIFEST.json"));
-  assert.equal(publicManifest.counts.uniqueSkills, 76);
+  assert.ok(publicManifest.counts.uniqueSkills > 0);
+  assert.equal(
+    publicManifest.counts.uniqueSkills,
+    libraryManifest.packages.publicCatalog.uniqueSkills
+  );
   assert.match(powershellInstaller, /discover-skills\.js/u);
   assert.match(shellInstaller, /discover-skills\.js/u);
   assert.doesNotMatch(powershellInstaller, /plugins[\\/]cache/u);

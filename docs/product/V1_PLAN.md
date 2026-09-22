@@ -332,6 +332,8 @@ Não otimizar por percentual de coverage isoladamente.
 
 ### V1-07 — Complexity Gate
 
+> **Implementação:** entregue em shadow/alpha neste galho. O gate é determinístico, precede Router v3, limita skills/contexto e não habilita multiagent apenas por complexidade.
+
 Gate antes do roteamento completo.
 
 Classes iniciais:
@@ -376,6 +378,8 @@ O gate deve ser barato e determinístico sempre que possível.
 ---
 
 ### V1-08 — Router v3
+
+> **Implementação:** entregue em shadow/alpha neste galho. Router v2 continua default; v3 pode ser inspecionado por `route explain` ou ativado explicitamente com `--router-version 3`. A promoção para default continua condicionada a evidência comparativa.
 
 Substituir roteamento centrado em trigger por:
 

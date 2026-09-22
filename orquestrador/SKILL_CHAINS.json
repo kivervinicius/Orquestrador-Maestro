@@ -127,7 +127,10 @@
         "skill-webapp-testing",
         "skill-impeccable",
         "skill-verification-before-completion",
-        "skill-browser-agent"
+        "skill-browser-agent",
+        "skill-product-ux-architecture",
+        "skill-design-engineering-craft",
+        "skill-motion-design-principles"
       ],
       "rules": [
         "This skill owns intent classification, Design Profile discovery, the design-system adapter, Visual QA DoD, and preserve-vs-redesign policy.",
@@ -148,7 +151,9 @@
         "skill-frontend-ux-guardrails",
         "skill-modern-ui-patterns",
         "skill-open-design-ui",
-        "skill-webapp-testing"
+        "skill-webapp-testing",
+        "skill-design-engineering-craft",
+        "skill-motion-design-principles"
       ],
       "rules": [
         "Interpret natural-language design requests before selecting a focused intervention.",
@@ -185,7 +190,9 @@
     "skill-open-design-ui": {
       "mayInvoke": [
         "skill-frontend-ux-guardrails",
-        "skill-modern-ui-patterns"
+        "skill-modern-ui-patterns",
+        "skill-design-engineering-craft",
+        "skill-motion-design-principles"
       ]
     },
     "skill-premium-web-experience": {
@@ -197,7 +204,9 @@
         "skill-impeccable",
         "skill-browser-agent",
         "skill-multiagent-orchestration",
-        "skill-saas-factory"
+        "skill-saas-factory",
+        "skill-design-engineering-craft",
+        "skill-motion-design-principles"
       ],
       "rules": [
         "Use this as the experience strategy and coordination layer; keep downstream skills focused on their specialty.",
@@ -312,6 +321,44 @@
         "Use when the user asks about WhatsApp campaigns for leads in Meta Ads.",
         "Combine with Evolution API skill for WhatsApp API integration.",
         "Combine with billing skill for payment collection via WhatsApp."
+      ]
+    },
+    "skill-product-ux-architecture": {
+      "loadFirst": true,
+      "mayInvoke": [
+        "skill-open-design-ui",
+        "skill-modern-ui-patterns",
+        "skill-frontend-ux-guardrails"
+      ],
+      "rules": [
+        "Use as the owner for product-wide information architecture, navigation, screen inventory and journeys.",
+        "Do not invoke downstream skills eagerly; load them only when the user intent independently requires visual direction, component behavior or UX QA.",
+        "Keep implementation detail out of the UX architecture phase until the product map is stable enough."
+      ]
+    },
+    "skill-design-engineering-craft": {
+      "loadFirst": true,
+      "mayInvoke": [
+        "skill-motion-design-principles",
+        "skill-frontend-ux-guardrails",
+        "skill-webapp-testing"
+      ],
+      "rules": [
+        "Use only after the visual/product direction is sufficiently defined.",
+        "Keep changes bounded to implementation craft; do not expand into an unrequested redesign.",
+        "Load motion only when animation evidence exists."
+      ]
+    },
+    "skill-motion-design-principles": {
+      "loadFirst": true,
+      "mayInvoke": [
+        "skill-frontend-ux-guardrails",
+        "skill-webapp-testing"
+      ],
+      "rules": [
+        "Motion must communicate state, continuity, hierarchy or feedback; decorative motion alone is not sufficient evidence.",
+        "Always preserve a reduced-motion path.",
+        "Do not load design-system or product-architecture skills unless the request independently requires them."
       ]
     }
   },

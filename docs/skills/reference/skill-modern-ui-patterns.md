@@ -54,6 +54,7 @@ A skill permanece no catálogo canônico e é disponibilizada sob demanda; ela n
 - Chain `skill-impeccable`
 - Chain `skill-open-design-ui`
 - Chain `skill-premium-web-experience`
+- Chain `skill-product-ux-architecture`
 - Chain `skill-saas-admin-dashboard`
 - Chain `skill-saas-factory`
 
