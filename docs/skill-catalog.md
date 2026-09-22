@@ -3,8 +3,8 @@
 
 Este catálogo compacto é gerado a partir de [`orquestrador/SKILLS_MANIFEST.json`](../orquestrador/SKILLS_MANIFEST.json). Para orientação, consulte o [portal de skills](skills/README.md); para detalhes, abra a [referência individual](skills/reference/README.md).
 
-Total canônico: 52
-Catálogo público deduplicado: 75 skills ([manifesto público](../skill-library/PUBLIC_SKILLS_MANIFEST.json)).
+Total canônico: 53
+Catálogo público deduplicado: 76 skills ([manifesto público](../skill-library/PUBLIC_SKILLS_MANIFEST.json)).
 
 Atualize e valide este catálogo com `node scripts/skill-catalog.js generate`, `check` e `validate` (ou `orquestrador-maestro skill-catalog <comando>`).
 
@@ -18,10 +18,11 @@ Atualize e valide este catálogo com `node scripts/skill-catalog.js generate`, `
 | [skill-browser-agent](skills/reference/skill-browser-agent.md) | automation | medium | Sob demanda | Reliable web-browser agents using semantic page state, accessibility-tree inspection, structured Playwright actions, post-action validation, replay, and bounded visual fallbacks. |
 | [skill-cobranca-automatizada-saas-abacatepay](skills/reference/skill-cobranca-automatizada-saas-abacatepay.md) | payments | high | Sob demanda | Automatic SaaS billing engine with AbacatePay (PIX + card), dunning (regua de cobranca), trial management, invoice portal, Resend email and Evolution API WhatsApp notifications, admin CRUD, and billing metrics. |
 | [skill-database-migrations](skills/reference/skill-database-migrations.md) | database | high | Sob demanda | Migrações de banco seguras, compatíveis, idempotentes e verificáveis. |
-| [skill-deep-wiki](skills/reference/skill-deep-wiki.md) | documentation | low | Sob demanda | Documentação técnica navegável com arquitetura, Mermaid e onboarding. |
+| [skill-deep-wiki](skills/reference/skill-deep-wiki.md) | documentation | low | Sob demanda | Documentação de produto baseada em evidência: inventário de capacidades, README/TL;DR, Quick Start, guias, API/CLI/configuração, visuais, cobertura e drift. |
 | [skill-dependency-upgrade](skills/reference/skill-dependency-upgrade.md) | maintenance | medium | Sob demanda | Atualização controlada de dependências e lockfiles. |
 | [skill-doublecheck](skills/reference/skill-doublecheck.md) | verification | medium | Sob demanda | Verifica afirmações, fontes e risco de alucinação em respostas, pesquisas e documentos, com modo pontual ou contínuo. |
 | [skill-elevenlabs-voice-cloning](skills/reference/skill-elevenlabs-voice-cloning.md) | ai | high | Sob demanda | ElevenLabs voice generation/cloning integration with consent, asset handling, and server-side API use. |
+| [skill-engineering-quality](skills/reference/skill-engineering-quality.md) | engineering | medium | Nativa | Detecta a stack real do repositório e aplica um baseline de qualidade por delta, preservando tooling saudável e validando format, lint, tipos, testes, build e CI. |
 | [skill-evolution-api](skills/reference/skill-evolution-api.md) | communication | medium | Sob demanda | Evolution API WhatsApp integration with webhook idempotency, queueing, consent, and rate limits. |
 | [skill-frontend-excellence](skills/reference/skill-frontend-excellence.md) | frontend | medium | Nativa | Use for product frontend work: classify intent, discover the project's design system and Design Profile, preserve or evolve UI, run Visual QA, and refuse to mark frontend done from build-only evidence. |
 | [skill-frontend-ux-guardrails](skills/reference/skill-frontend-ux-guardrails.md) | frontend | medium | Sob demanda | Frontend UX quality gate for responsive behavior, overflow, accessibility, interaction usability, touch targets, typography, layout stability, mobile behavior, focus states, reduced motion, and final visual validation. |

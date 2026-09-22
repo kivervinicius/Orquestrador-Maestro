@@ -8,10 +8,10 @@
     "community"
   ],
   "counts": {
-    "sourceSkillFiles": 177,
-    "uniqueSkills": 75,
-    "shadowedDuplicates": 102,
-    "conflictingIds": 6
+    "sourceSkillFiles": 179,
+    "uniqueSkills": 76,
+    "shadowedDuplicates": 103,
+    "conflictingIds": 0
   },
   "skills": [
     {
@@ -225,10 +225,10 @@
     {
       "id": "skill-deep-wiki",
       "name": "skill-deep-wiki",
-      "description": "Gera documentação técnica navegável de um repositório, com arquitetura, Mermaid, onboarding, AGENTS.md, llms.txt e páginas por domínio.",
+      "description": "Use when documenting or auditing a software product or repository, creating or improving README, Quick Start, guides, API/CLI/configuration references, troubleshooting, visual documentation plans, or checking documentation drift after product changes.",
       "source": "maestro",
       "relativePath": "orquestrador/skills/skill-deep-wiki",
-      "contentHash": "079239c31277ef5064471e222261d6d50a08dd2c3d79f0d3d927c12ab4188b03"
+      "contentHash": "34c922ce7d37f15bed7dd3eb85d0a0400c57a5fe07a3e83ce24d9772131eb288"
     },
     {
       "id": "skill-dependency-upgrade",
@@ -253,6 +253,14 @@
       "source": "maestro",
       "relativePath": "orquestrador/skills/skill-elevenlabs-voice-cloning",
       "contentHash": "550d4c952286a02a0c65a61db19c479e4e4ffa6eff4d30cad456ab64bda09582"
+    },
+    {
+      "id": "skill-engineering-quality",
+      "name": "skill-engineering-quality",
+      "description": "Use when a repository needs a quality baseline or modernization across one or more detected application stacks, especially linting, formatting, type checking, tests, build validation, developer tooling, hooks, or CI consistency.",
+      "source": "maestro",
+      "relativePath": "orquestrador/skills/skill-engineering-quality",
+      "contentHash": "a992a5ddcadd5f791bcb0f0f5bf591e306302c09efb9e888a679d9ee9c90f2e1"
     },
     {
       "id": "skill-evolution-api",
@@ -615,12 +623,5 @@
       "contentHash": "bb46b31f275a7ec4006d43bba9bf5d0e05955c846a3b58e66b82dc930ac0ac70"
     }
   ],
-  "conflicts": [
-    "skill-browser-agent",
-    "skill-frontend-ux-guardrails",
-    "skill-impeccable",
-    "skill-modern-ui-patterns",
-    "skill-open-design-ui",
-    "skill-saas-factory"
-  ]
+  "conflicts": []
 }

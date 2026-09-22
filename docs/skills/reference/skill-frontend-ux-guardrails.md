@@ -17,7 +17,8 @@ Frontend UX quality gate for responsive behavior, overflow, accessibility, inter
 
 ## Quando não usar
 
-- Pedidos fora do domínio frontend; use a skill específica quando houver uma intenção mais precisa.
+- Definição do sistema visual ou direção estética; use skill-open-design-ui.
+- Implementação de componentes e estados de produto; use skill-modern-ui-patterns.
 
 ## Exemplos de pedidos reconhecidos
 

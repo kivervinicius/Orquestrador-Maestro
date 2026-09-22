@@ -1,7 +1,7 @@
 <!-- GENERATED FILE: scripts/skill-catalog.js; DO NOT EDIT. -->
 # Referência de skills
 
-Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../../orquestrador/SKILLS_MANIFEST.json). Total: 52.
+Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../../orquestrador/SKILLS_MANIFEST.json). Total: 53.
 
 ## Por objetivo
 
@@ -52,6 +52,7 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 - [skill-database-migrations](./skill-database-migrations.md)
 - [skill-doublecheck](./skill-doublecheck.md)
+- [skill-engineering-quality](./skill-engineering-quality.md)
 - [skill-repo-health](./skill-repo-health.md)
 - [skill-research-and-synthesis](./skill-research-and-synthesis.md)
 - [skill-systematic-debugging](./skill-systematic-debugging.md)
@@ -116,6 +117,7 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 ### engineering
 
+- [skill-engineering-quality](./skill-engineering-quality.md)
 - [skill-repo-health](./skill-repo-health.md)
 - [skill-systematic-debugging](./skill-systematic-debugging.md)
 
@@ -339,10 +341,6 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 - [skill-systematic-debugging](./skill-systematic-debugging.md)
 
-### deep
-
-- [skill-deep-wiki](./skill-deep-wiki.md)
-
 ### delivery
 
 - [skill-release-engineering](./skill-release-engineering.md)
@@ -371,12 +369,17 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 - [skill-doublecheck](./skill-doublecheck.md)
 
+### drift
+
+- [skill-deep-wiki](./skill-deep-wiki.md)
+
 ### elevenlabs
 
 - [skill-elevenlabs-voice-cloning](./skill-elevenlabs-voice-cloning.md)
 
 ### engineering
 
+- [skill-engineering-quality](./skill-engineering-quality.md)
 - [skill-release-engineering](./skill-release-engineering.md)
 - [skill-repo-health](./skill-repo-health.md)
 - [skill-systematic-debugging](./skill-systematic-debugging.md)
@@ -520,6 +523,10 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 - [skill-modern-ui-patterns](./skill-modern-ui-patterns.md)
 
+### multi-stack
+
+- [skill-engineering-quality](./skill-engineering-quality.md)
+
 ### multiagent
 
 - [skill-multiagent-orchestration](./skill-multiagent-orchestration.md)
@@ -573,10 +580,23 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 - [skill-live-processing](./skill-live-processing.md)
 - [skill-manual-video-processing](./skill-manual-video-processing.md)
 
+### product-docs
+
+- [skill-deep-wiki](./skill-deep-wiki.md)
+
 ### quality
 
+- [skill-engineering-quality](./skill-engineering-quality.md)
 - [skill-quality-gate](./skill-quality-gate.md)
 - [skill-verification-before-completion](./skill-verification-before-completion.md)
+
+### quick-start
+
+- [skill-deep-wiki](./skill-deep-wiki.md)
+
+### readme
+
+- [skill-deep-wiki](./skill-deep-wiki.md)
 
 ### recon
 
@@ -715,10 +735,6 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 ### whatsapp
 
 - [skill-whatsapp-meta-ads-leads](./skill-whatsapp-meta-ads-leads.md)
-
-### wiki
-
-- [skill-deep-wiki](./skill-deep-wiki.md)
 
 ### workflow
 

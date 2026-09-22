@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## 1.0.0-alpha.1 - 2026-09-22
+
+### V1 Skill Intelligence Foundation
+
+- **Breaking (Maestro skills):** o manifesto canônico passa para V3 e todas as 53 skills `maestro/*` passam a exigir Skill Contract V2 nativo. Não existe fallback para os campos canônicos 0.x.
+- **Compatibilidade externa preservada:** skills de biblioteca, usuário e projeto continuam aceitando seus formatos próprios e são normalizadas somente na fronteira do registry; sem routing confiável permanecem explicit-only.
+- **Fonte única:** `routing.useWhen`, `routing.doNotUseWhen`, `maturity`, `context`, `outputs` e `verification` substituem metadados canônicos duplicados como `triggers`, `status`, `workflow.validation` e campos equivalentes em `documentation`.
+- **Taxonomia:** capabilities passam a usar vocabulário controlado, já incluindo Git, CI, pull requests, issue resolution, refactoring, API design, performance, containers, Kubernetes, build tooling, developer environment e legacy modernization.
+- **Catálogo:** 53 skills Maestro classificadas explicitamente em 15 Core e 38 Domain; catálogo público passa a 76 skills únicas e 0 IDs conflitantes.
+- **Engineering Quality:** nova `skill-engineering-quality` Core detecta stack/framework/tooling antes de agir e aplica baseline multi-stack por delta para formatter, lint/static analysis, tipos/compilação, testes, build, hooks e CI, delegando UX, upgrades, debugging e E2E às skills especializadas.
+- **Product Documentation:** `skill-deep-wiki` evolui sem criar ID concorrente: passa a cobrir discovery baseado em evidência, inventário de capacidades, README/TL;DR, Quick Start, guias, API/CLI/configuração, documentação operacional, visual evidence planning, coverage e documentation drift; mirrors públicos permanecem autocontidos e sem conflito.
+- **Governança:** novo behavior harness, auditoria `skills:contract-audit:strict` e gate obrigatório no CI.
+- **Instalação:** bundle canônico é montado e validado em staging antes do swap para o destino; falha de publicação restaura o diretório anterior quando possível.
+- **CI:** stacked PRs em `feature/*` e `feat/*` passam a executar tests/benchmarks, evitando galhos intermediários sem validação completa.
+- **Planejamento:** adicionados rollout shadow/rollback, segurança do Context Compiler, progressive disclosure, coverage de capacidades do desenvolvedor e definição explícita dos contratos SemVer da 1.0.
+
+
 - Orquestração: execução passa a ser solo por padrão; apenas o perfil explícito `multiagent` permite fan-out. Operações mecânicas de Git/VCS continuam solo mesmo sob solicitação de perfil multiagente, e child agents identificados em contrato solo geram `delegation.violation` e impedem `validated`.
 - Resolution: `verification.skipped` deixa de ser publicado como falha e não conta mais como prova por omissão: somente um skip explicitamente marcado como `not_applicable` pode satisfazer uma Task sem validators/DoD verificável. O estado interno `pending` não vaza na projeção pública, falhas do LaneExecutor preservam a classificação canônica e crashes de provider capturam o ChangeSet antes do handoff.
 - Benchmark: OpenCode usado pelos workflows oficiais fica fixado em `opencode-ai@1.18.31` enquanto o driver permanecer no contrato JSONL v1; upgrades de geração exigem revisão explícita do driver.

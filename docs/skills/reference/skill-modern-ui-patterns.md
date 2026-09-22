@@ -17,7 +17,8 @@ Professional frontend UI implementation with modern component composition, inter
 
 ## Quando não usar
 
-- Pedidos fora do domínio frontend; use a skill específica quando houver uma intenção mais precisa.
+- Direção visual, tokens e identidade de interface; use skill-open-design-ui.
+- Auditoria final de responsividade, acessibilidade e overflow; use skill-frontend-ux-guardrails.
 
 ## Exemplos de pedidos reconhecidos
 

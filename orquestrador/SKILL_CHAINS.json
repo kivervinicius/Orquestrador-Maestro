@@ -8,86 +8,48 @@
     "neverLoadFullCatalog": true
   },
   "riskClasses": {
-    "trivial": { "mandatoryPreCode": [] },
-    "local": { "mandatoryPreCode": [] },
-    "structural": { "mandatoryPreCode": ["deep-interview", "skill-preflight", "skill-adr"] },
-    "integration": { "mandatoryPreCode": ["deep-interview", "skill-preflight", "skill-adr"] },
-    "security-compliance": { "mandatoryPreCode": ["deep-interview", "skill-preflight", "skill-adr"] },
-    "domain-critical": { "mandatoryPreCode": ["deep-interview", "skill-preflight", "skill-adr"] }
+    "trivial": {
+      "mandatoryPreCode": []
+    },
+    "local": {
+      "mandatoryPreCode": []
+    },
+    "structural": {
+      "mandatoryPreCode": [
+        "deep-interview",
+        "skill-preflight",
+        "skill-adr"
+      ]
+    },
+    "integration": {
+      "mandatoryPreCode": [
+        "deep-interview",
+        "skill-preflight",
+        "skill-adr"
+      ]
+    },
+    "security-compliance": {
+      "mandatoryPreCode": [
+        "deep-interview",
+        "skill-preflight",
+        "skill-adr"
+      ]
+    },
+    "domain-critical": {
+      "mandatoryPreCode": [
+        "deep-interview",
+        "skill-preflight",
+        "skill-adr"
+      ]
+    }
   },
   "chains": {
-    "skill-saas-factory": {
-      "loadFirst": true,
-      "mayInvoke": [
-        "skill-saas-admin-dashboard",
-        "skill-saas-core-limits",
-        "skill-frontend-ux-guardrails",
-        "skill-modern-ui-patterns",
-        "skill-open-design-ui",
-        "skill-supabase-rls",
-        "skill-abacatepay-integration",
-        "skill-stripe-integration",
-        "skill-saas-security-scan",
-        "skill-security-hooks",
-        "skill-unified-analytics",
-        "skill-ai-orchestration",
-        "skill-multiagent-orchestration"
-      ],
-      "rules": [
-        "Use frontend/UI skills when landing, login, signup, onboarding, app dashboard, responsive behavior, or visual polish are present.",
-        "Use payment skills only when a provider or billing workflow is present.",
-        "Use Supabase RLS when database, tenancy, auth, policies, or browser-side data access are present.",
-        "Use security scan/hooks before production or when the user asks for audit, hardening, or SaaS security."
-      ]
-    },
-    "skill-saas-admin-dashboard": {
-      "mayInvoke": [
-        "skill-frontend-ux-guardrails",
-        "skill-modern-ui-patterns",
-        "skill-unified-analytics",
-        "skill-saas-core-limits"
-      ]
-    },
-    "skill-saas-security-scan": {
-      "mayInvoke": [
-        "skill-security-hooks",
-        "skill-supabase-rls",
-        "skill-saas-dast-recon"
-      ],
-      "rules": [
-        "DAST requires explicit owned target or staging authorization.",
-        "Hooks require explicit local repository authorization."
-      ]
-    },
-    "skill-security-hooks": {
-      "mayInvoke": [
-        "skill-verification-before-completion"
-      ]
-    },
-    "skill-supabase-rls": {
-      "mayInvoke": [
-        "skill-saas-core-limits"
-      ]
-    },
     "skill-ai-orchestration": {
       "mayInvoke": [
         "skill-multiagent-orchestration",
         "skill-unified-analytics",
         "skill-google-workspace-sync",
         "skill-elevenlabs-voice-cloning"
-      ]
-    },
-    "skill-multiagent-orchestration": {
-      "mayInvoke": [
-        "skill-saas-security-scan",
-        "skill-security-hooks",
-        "skill-frontend-ux-guardrails",
-        "skill-unified-analytics"
-      ],
-      "rules": [
-        "Use only when workstreams are independent or the user explicitly asks for subagents/multiagents.",
-        "Assign file/module ownership before implementation agents edit files.",
-        "Keep integration and final verification with the lead agent."
       ]
     },
     "skill-aionui-cowork-orchestration": {
@@ -103,35 +65,57 @@
         "Keep Codex as default executor unless the user explicitly chooses another agent."
       ]
     },
+    "skill-deep-wiki": {
+      "loadFirst": true,
+      "mayInvoke": [
+        "skill-browser-agent",
+        "skill-webapp-testing",
+        "skill-watch-evidence",
+        "skill-doublecheck",
+        "skill-verification-before-completion",
+        "skill-adr"
+      ],
+      "rules": [
+        "Own documentation discovery, information architecture, README/TL;DR/Quick Start, guides, references, coverage and drift; do not implement product features or create parallel evidence/browser infrastructure.",
+        "Use browser-agent or webapp-testing only when current visual/runtime evidence is required; Product Documentation specifies what must be demonstrated, the delegated skill owns how to capture or execute it.",
+        "Use ADR only for an actual architecture decision record, not merely because architecture is documented.",
+        "Use verification-before-completion before claiming documentation completeness or verified Quick Start/runtime claims.",
+        "For a standard documentation task load at most one downstream skill unless independent evidence requirements justify more."
+      ]
+    },
+    "skill-doublecheck": {
+      "mayInvoke": [
+        "skill-research-and-synthesis",
+        "skill-verification-before-completion"
+      ],
+      "rules": [
+        "Use one-shot verification by default; persistent mode requires an explicit request.",
+        "Use web research for unstable or current claims and cite the supporting sources.",
+        "Never invent citations or claim verification without evidence."
+      ]
+    },
+    "skill-engineering-quality": {
+      "loadFirst": true,
+      "mayInvoke": [
+        "skill-repo-health",
+        "skill-systematic-debugging",
+        "skill-dependency-upgrade",
+        "skill-security-hooks",
+        "skill-webapp-testing",
+        "skill-frontend-excellence",
+        "skill-verification-before-completion"
+      ],
+      "rules": [
+        "Own multi-stack quality baseline setup: stack discovery, formatter/lint/static analysis, typecheck/compile, tests, build and CI consistency.",
+        "Do not duplicate design/UX, broad repo diagnosis, dependency migration, debugging or browser E2E responsibilities; invoke their specialized skill only when evidence requires it.",
+        "For a standard task load at most one downstream skill unless independent evidence requires additional specialization.",
+        "Do not use multiagent execution for mechanical configuration, formatting, one-file edits or a single validation command."
+      ]
+    },
     "skill-evolution-api": {
       "mayInvoke": [
         "skill-ai-orchestration",
         "skill-unified-analytics"
-      ]
-    },
-    "skill-google-workspace-sync": {
-      "mayInvoke": [
-        "skill-unified-analytics"
-      ]
-    },
-    "skill-live-processing": {
-      "mayInvoke": [
-        "skill-smart-clip-detection",
-        "skill-manual-video-processing",
-        "skill-ai-orchestration"
-      ]
-    },
-    "skill-manual-video-processing": {
-      "mayInvoke": [
-        "skill-smart-clip-detection",
-        "skill-ai-orchestration"
-      ]
-    },
-    "skill-watch-evidence": {
-      "mayInvoke": [
-        "skill-smart-clip-detection",
-        "skill-browser-agent",
-        "skill-verification-before-completion"
       ]
     },
     "skill-frontend-excellence": {
@@ -151,6 +135,51 @@
         "Use premium-web-experience only for cinematic marketing sites, not product admin/SSO.",
         "Use open-design-ui for visual direction, modern-ui-patterns for interaction states, frontend-ux-guardrails for the final UX gate, and webapp-testing for critical browser journeys.",
         "Load at most two downstream frontend skills for a standard task."
+      ]
+    },
+    "skill-google-workspace-sync": {
+      "mayInvoke": [
+        "skill-unified-analytics"
+      ]
+    },
+    "skill-impeccable": {
+      "loadFirst": true,
+      "mayInvoke": [
+        "skill-frontend-ux-guardrails",
+        "skill-modern-ui-patterns",
+        "skill-open-design-ui",
+        "skill-webapp-testing"
+      ],
+      "rules": [
+        "Interpret natural-language design requests before selecting a focused intervention.",
+        "Load at most two downstream frontend skills for a standard task unless the user requests a deep audit.",
+        "Use the external Impeccable CLI only when it is already available or the user explicitly authorizes installation."
+      ]
+    },
+    "skill-live-processing": {
+      "mayInvoke": [
+        "skill-smart-clip-detection",
+        "skill-manual-video-processing",
+        "skill-ai-orchestration"
+      ]
+    },
+    "skill-manual-video-processing": {
+      "mayInvoke": [
+        "skill-smart-clip-detection",
+        "skill-ai-orchestration"
+      ]
+    },
+    "skill-multiagent-orchestration": {
+      "mayInvoke": [
+        "skill-saas-security-scan",
+        "skill-security-hooks",
+        "skill-frontend-ux-guardrails",
+        "skill-unified-analytics"
+      ],
+      "rules": [
+        "Use only when workstreams are independent or the user explicitly asks for subagents/multiagents.",
+        "Assign file/module ownership before implementation agents edit files.",
+        "Keep integration and final verification with the lead agent."
       ]
     },
     "skill-open-design-ui": {
@@ -177,18 +206,47 @@
         "Use multiagent orchestration only for independent lanes and centralize integration and final QA."
       ]
     },
-    "skill-impeccable": {
-      "loadFirst": true,
+    "skill-saas-admin-dashboard": {
       "mayInvoke": [
         "skill-frontend-ux-guardrails",
         "skill-modern-ui-patterns",
+        "skill-unified-analytics",
+        "skill-saas-core-limits"
+      ]
+    },
+    "skill-saas-factory": {
+      "loadFirst": true,
+      "mayInvoke": [
+        "skill-saas-admin-dashboard",
+        "skill-saas-core-limits",
+        "skill-frontend-ux-guardrails",
+        "skill-modern-ui-patterns",
         "skill-open-design-ui",
-        "skill-webapp-testing"
+        "skill-supabase-rls",
+        "skill-abacatepay-integration",
+        "skill-stripe-integration",
+        "skill-saas-security-scan",
+        "skill-security-hooks",
+        "skill-unified-analytics",
+        "skill-ai-orchestration",
+        "skill-multiagent-orchestration"
       ],
       "rules": [
-        "Interpret natural-language design requests before selecting a focused intervention.",
-        "Load at most two downstream frontend skills for a standard task unless the user requests a deep audit.",
-        "Use the external Impeccable CLI only when it is already available or the user explicitly authorizes installation."
+        "Use frontend/UI skills when landing, login, signup, onboarding, app dashboard, responsive behavior, or visual polish are present.",
+        "Use payment skills only when a provider or billing workflow is present.",
+        "Use Supabase RLS when database, tenancy, auth, policies, or browser-side data access are present.",
+        "Use security scan/hooks before production or when the user asks for audit, hardening, or SaaS security."
+      ]
+    },
+    "skill-saas-security-scan": {
+      "mayInvoke": [
+        "skill-security-hooks",
+        "skill-supabase-rls",
+        "skill-saas-dast-recon"
+      ],
+      "rules": [
+        "DAST requires explicit owned target or staging authorization.",
+        "Hooks require explicit local repository authorization."
       ]
     },
     "skill-scope-control": {
@@ -203,15 +261,26 @@
         "Recommend keep, split or justify with evidence from the diff."
       ]
     },
-    "skill-doublecheck": {
+    "skill-security-hooks": {
       "mayInvoke": [
-        "skill-research-and-synthesis",
+        "skill-verification-before-completion"
+      ]
+    },
+    "skill-skill-development": {
+      "loadFirst": true,
+      "mayInvoke": [
+        "skill-quality-gate",
         "skill-verification-before-completion"
       ],
       "rules": [
-        "Use one-shot verification by default; persistent mode requires an explicit request.",
-        "Use web research for unstable or current claims and cite the supporting sources.",
-        "Never invent citations or claim verification without evidence."
+        "Inspect the existing router, aliases, manifest and chains before creating a new pattern.",
+        "Keep the skill focused and validate natural-language routing with examples.",
+        "Do not install an external artifact without a quality and permission review."
+      ]
+    },
+    "skill-supabase-rls": {
+      "mayInvoke": [
+        "skill-saas-core-limits"
       ]
     },
     "skill-threat-modeling": {
@@ -227,16 +296,11 @@
         "Use incremental mode only when a baseline is available."
       ]
     },
-    "skill-skill-development": {
-      "loadFirst": true,
+    "skill-watch-evidence": {
       "mayInvoke": [
-        "skill-quality-gate",
+        "skill-smart-clip-detection",
+        "skill-browser-agent",
         "skill-verification-before-completion"
-      ],
-      "rules": [
-        "Inspect the existing router, aliases, manifest and chains before creating a new pattern.",
-        "Keep the skill focused and validate natural-language routing with examples.",
-        "Do not install an external artifact without a quality and permission review."
       ]
     },
     "skill-whatsapp-meta-ads-leads": {

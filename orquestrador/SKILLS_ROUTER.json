@@ -1009,17 +1009,36 @@
       "priority": 0
     },
     "skill-deep-wiki": {
-      "description": "Documentação técnica navegável com arquitetura, Mermaid e onboarding.",
+      "description": "Documentação de produto baseada em evidência: inventário de capacidades, README/TL;DR, Quick Start, guias, API/CLI/configuração, visuais, cobertura e drift.",
       "triggers": [
         "deep wiki",
         "wiki tecnica",
-        "documentar repositorio"
+        "wiki técnica",
+        "documentar repositorio",
+        "documentar repositório",
+        "documente completamente este projeto",
+        "documentação completa",
+        "documentacao completa",
+        "product documentation",
+        "product docs",
+        "crie README",
+        "melhore o README",
+        "Quick Start",
+        "documente as features",
+        "documente as funcionalidades",
+        "documente a API",
+        "documente a CLI",
+        "audite a documentação",
+        "audite a documentacao",
+        "documentation drift",
+        "documentação desatualizada",
+        "documentacao desatualizada"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-deep-wiki/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-deep-wiki/SKILL.md",
       "cost": "medium",
       "safety": "docs-only-by-default",
-      "priority": 0
+      "priority": 15
     },
     "skill-agent-observability": {
       "description": "Observabilidade de agentes, custos, latência, qualidade e regressões.",
@@ -1250,6 +1269,28 @@
       "cost": "low",
       "safety": "task-specific-guardrails",
       "priority": 0
+    },
+    "skill-engineering-quality": {
+      "description": "Detecta a stack real do repositório e aplica um baseline de qualidade por delta, preservando tooling saudável e validando format, lint, tipos, testes, build e CI.",
+      "triggers": [
+        "engineering quality",
+        "qualidade de engenharia",
+        "boas práticas neste projeto",
+        "boas praticas neste projeto",
+        "configurar lint format typecheck testes e build",
+        "configurar lint e formatter",
+        "configurar eslint prettier",
+        "setup de qualidade",
+        "quality baseline",
+        "padronizar qualidade do repositorio",
+        "padronizar qualidade do repositório",
+        "detecte a stack e configure qualidade"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-engineering-quality/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-engineering-quality/SKILL.md",
+      "cost": "medium",
+      "safety": "task-specific-guardrails",
+      "priority": 20
     }
   },
   "riskClasses": {

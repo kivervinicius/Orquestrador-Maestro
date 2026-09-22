@@ -17,7 +17,8 @@ Frontend visual-system workflow for design direction, tokens, component patterns
 
 ## Quando não usar
 
-- Pedidos fora do domínio frontend; use a skill específica quando houver uma intenção mais precisa.
+- Implementação funcional de componentes já definidos pelo design system.
+- Correção final de UX/acessibilidade sem necessidade de direção visual nova.
 
 ## Exemplos de pedidos reconhecidos
 

@@ -13,7 +13,7 @@ test("installer contract stays aligned with the published package", () => {
   const shellBootstrap = fs.readFileSync(path.join(ROOT, "scripts", "bootstrap-install.sh"), "utf8");
   const packageVersion = packageJson.version;
 
-  assert.match(packageVersion, /^\d+\.\d+\.\d+$/u);
+  assert.match(packageVersion, /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u);
   assert.match(powershellBootstrap, new RegExp(`\\$packageVersion = "${packageVersion.replaceAll(".", "\\.")}"`));
   assert.match(shellBootstrap, new RegExp(`PACKAGE_VERSION="${packageVersion.replaceAll(".", "\\.")}"`));
 });
@@ -35,7 +35,7 @@ test("published package carries the public catalog and refreshes its installed i
 
   assert.ok(packageJson.files.includes("codex/skills/"));
   assert.ok(packageJson.files.includes("skill-library/PUBLIC_SKILLS_MANIFEST.json"));
-  assert.equal(publicManifest.counts.uniqueSkills, 75);
+  assert.equal(publicManifest.counts.uniqueSkills, 76);
   assert.match(powershellInstaller, /discover-skills\.js/u);
   assert.match(shellInstaller, /discover-skills\.js/u);
   assert.doesNotMatch(powershellInstaller, /plugins[\\/]cache/u);
@@ -49,4 +49,20 @@ test("desktop notifications keep a compatible notifier API and safe uuid overrid
   assert.equal(typeof notifier.notify, "function");
   assert.equal(packageJson.overrides?.["node-notifier"]?.uuid, "11.1.1");
   assert.equal(require("uuid/package.json").version, "11.1.1");
+});
+
+
+test("V1 core installer stages and validates the canonical bundle before publish", () => {
+  const powershellInstaller = fs.readFileSync(path.join(ROOT, "scripts", "install.ps1"), "utf8");
+  const shellInstaller = fs.readFileSync(path.join(ROOT, "scripts", "install.sh"), "utf8");
+
+  for (const installer of [powershellInstaller, shellInstaller]) {
+    assert.match(installer, /install-/u);
+    assert.match(installer, /SKILLS_MANIFEST\.json/u);
+    assert.match(installer, /manifest must be V3|manifest must be V3|manifest must be V3|manifest must be V3|manifest must be V3|must be V3/u);
+    assert.match(installer, /native Skill Contract V2/u);
+  }
+
+  assert.match(shellInstaller, /mv "\$STAGED_ORQUESTRADOR" "\$TARGET_ORQUESTRADOR"/u);
+  assert.match(powershellInstaller, /Move-Item -LiteralPath \$StagedOrquestrador -Destination \$TargetOrquestrador/u);
 });

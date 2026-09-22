@@ -17,7 +17,8 @@ Focused frontend critique and polish for interfaces that feel generic, amateur, 
 
 ## Quando não usar
 
-- Pedidos fora do domínio frontend; use a skill específica quando houver uma intenção mais precisa.
+- Redesign amplo ou construção completa de frontend; use skill-frontend-excellence.
+- Pedido que exige somente correção funcional sem trabalho de polish/UX.
 
 ## Exemplos de pedidos reconhecidos
 
