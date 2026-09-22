@@ -1656,7 +1656,18 @@ function handleRouteCommand(args) {
   const bundledRoot = path.join(rootDir, "orquestrador");
   const maestroRoot = hasV3SkillManifest(installedRoot) ? installedRoot : bundledRoot;
   const router = new SkillRouterV3({ maestroRoot });
+  const workspacePath = path.resolve(options.projectPath || process.cwd());
+  const { collectRoutingSignals } = require(path.join(rootDir, "runtime", "planner", "routing-signals"));
+  const { classifyComplexity: classifyRoutingComplexity } = require(path.join(rootDir, "runtime", "planner", "complexity-gate"));
+  const preliminaryComplexity = classifyRoutingComplexity(description, {
+    overrideLevel: options.complexity || undefined
+  });
+  const routingSignals = collectRoutingSignals(workspacePath, {
+    intent: description,
+    memory: ["COMPLEX", "DEEP"].includes(preliminaryComplexity.level) ? new Memory() : null
+  });
   const explained = router.explain(description, {
+    ...routingSignals,
     overrideLevel: options.complexity || undefined
   });
 
@@ -1723,12 +1734,22 @@ async function handleGoCommand(args, planningOnly = false) {
     throw new Error("--router-version aceita apenas 2 ou 3.");
   }
   const { evaluateRouterShadow } = require(path.join(rootDir, "runtime", "planner", "router-shadow"));
+  const { collectRoutingSignals } = require(path.join(rootDir, "runtime", "planner", "routing-signals"));
+  const { classifyComplexity: classifyRoutingComplexity } = require(path.join(rootDir, "runtime", "planner", "complexity-gate"));
+  const preliminaryComplexity = classifyRoutingComplexity(description, {
+    overrideLevel: options.complexity || undefined
+  });
+  const routingSignals = collectRoutingSignals(workspacePath, {
+    intent: description,
+    memory: ["COMPLEX", "DEEP"].includes(preliminaryComplexity.level) ? new Memory() : null
+  });
   const routingEvaluation = evaluateRouterShadow({
     intent: description,
     routerV2,
     routerV3,
     activeVersion: requestedRouterVersion,
     options: {
+      ...routingSignals,
       overrideLevel: options.complexity || undefined
     }
   });
