@@ -1,6 +1,8 @@
 "use strict";
 
 const { IntentRouter } = require("./intent-router");
+const { SkillRouterV3 } = require("./skill-router-v3");
+const { classifyComplexity: classifyRoutingComplexity, COMPLEXITY_BUDGETS, COMPLEXITY_LEVELS: ROUTING_COMPLEXITY_LEVELS } = require("./complexity-gate");
 const { gatherPreflight } = require("./context-preflight");
 const { DynamicInterviewer } = require("./dynamic-interviewer");
 const { decompose, TASK_TYPES } = require("./task-decomposer");
@@ -35,6 +37,10 @@ const dagUtils = require("./dag-utils");
 
 module.exports = {
   IntentRouter,
+  SkillRouterV3,
+  classifyRoutingComplexity,
+  COMPLEXITY_BUDGETS,
+  ROUTING_COMPLEXITY_LEVELS,
   gatherPreflight,
   DynamicInterviewer,
   decompose,

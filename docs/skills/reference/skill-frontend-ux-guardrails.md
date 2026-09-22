@@ -50,11 +50,14 @@ A skill permanece no catálogo canônico e é disponibilizada sob demanda; ela n
 ## Recipes e chains relacionadas
 
 - Recipe `complete-product-frontend`: Frontend completo com Design Profile e Visual QA
+- Chain `skill-design-engineering-craft`
 - Chain `skill-frontend-excellence`
 - Chain `skill-impeccable`
+- Chain `skill-motion-design-principles`
 - Chain `skill-multiagent-orchestration`
 - Chain `skill-open-design-ui`
 - Chain `skill-premium-web-experience`
+- Chain `skill-product-ux-architecture`
 - Chain `skill-saas-admin-dashboard`
 - Chain `skill-saas-factory`
 

@@ -1,7 +1,7 @@
 <!-- GENERATED FILE: scripts/skill-catalog.js; DO NOT EDIT. -->
 # Referência de skills
 
-Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../../orquestrador/SKILLS_MANIFEST.json). Total: 53.
+Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../../orquestrador/SKILLS_MANIFEST.json). Total: 56.
 
 ## Por objetivo
 
@@ -10,16 +10,19 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 - [skill-adr](./skill-adr.md)
 - [skill-aionui-cowork-orchestration](./skill-aionui-cowork-orchestration.md)
 - [skill-browser-agent](./skill-browser-agent.md)
+- [skill-design-engineering-craft](./skill-design-engineering-craft.md)
 - [skill-frontend-excellence](./skill-frontend-excellence.md)
 - [skill-frontend-ux-guardrails](./skill-frontend-ux-guardrails.md)
 - [skill-impeccable](./skill-impeccable.md)
 - [skill-incident-response](./skill-incident-response.md)
 - [skill-melhorar-ux-ui-por-referencia](./skill-melhorar-ux-ui-por-referencia.md)
 - [skill-modern-ui-patterns](./skill-modern-ui-patterns.md)
+- [skill-motion-design-principles](./skill-motion-design-principles.md)
 - [skill-multiagent-orchestration](./skill-multiagent-orchestration.md)
 - [skill-open-design-ui](./skill-open-design-ui.md)
 - [skill-preflight](./skill-preflight.md)
 - [skill-premium-web-experience](./skill-premium-web-experience.md)
+- [skill-product-ux-architecture](./skill-product-ux-architecture.md)
 - [skill-saas-admin-dashboard](./skill-saas-admin-dashboard.md)
 - [skill-saas-core-limits](./skill-saas-core-limits.md)
 - [skill-saas-factory](./skill-saas-factory.md)
@@ -123,13 +126,16 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 ### frontend
 
+- [skill-design-engineering-craft](./skill-design-engineering-craft.md)
 - [skill-frontend-excellence](./skill-frontend-excellence.md)
 - [skill-frontend-ux-guardrails](./skill-frontend-ux-guardrails.md)
 - [skill-impeccable](./skill-impeccable.md)
 - [skill-melhorar-ux-ui-por-referencia](./skill-melhorar-ux-ui-por-referencia.md)
 - [skill-modern-ui-patterns](./skill-modern-ui-patterns.md)
+- [skill-motion-design-principles](./skill-motion-design-principles.md)
 - [skill-open-design-ui](./skill-open-design-ui.md)
 - [skill-premium-web-experience](./skill-premium-web-experience.md)
+- [skill-product-ux-architecture](./skill-product-ux-architecture.md)
 - [skill-web-clone](./skill-web-clone.md)
 
 ### governance
@@ -219,6 +225,10 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 - [skill-abacatepay-integration](./skill-abacatepay-integration.md)
 - [skill-cobranca-automatizada-saas-abacatepay](./skill-cobranca-automatizada-saas-abacatepay.md)
 
+### accessibility
+
+- [skill-motion-design-principles](./skill-motion-design-principles.md)
+
 ### admin
 
 - [skill-saas-admin-dashboard](./skill-saas-admin-dashboard.md)
@@ -253,6 +263,10 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 - [skill-research-and-synthesis](./skill-research-and-synthesis.md)
 
+### animation
+
+- [skill-motion-design-principles](./skill-motion-design-principles.md)
+
 ### api
 
 - [skill-evolution-api](./skill-evolution-api.md)
@@ -260,6 +274,7 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 ### architecture
 
 - [skill-adr](./skill-adr.md)
+- [skill-product-ux-architecture](./skill-product-ux-architecture.md)
 
 ### automation
 
@@ -325,6 +340,10 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 - [skill-aionui-cowork-orchestration](./skill-aionui-cowork-orchestration.md)
 
+### craft
+
+- [skill-design-engineering-craft](./skill-design-engineering-craft.md)
+
 ### dashboard
 
 - [skill-saas-admin-dashboard](./skill-saas-admin-dashboard.md)
@@ -351,6 +370,7 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 ### design
 
+- [skill-design-engineering-craft](./skill-design-engineering-craft.md)
 - [skill-open-design-ui](./skill-open-design-ui.md)
 
 ### detection
@@ -379,6 +399,7 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 ### engineering
 
+- [skill-design-engineering-craft](./skill-design-engineering-craft.md)
 - [skill-engineering-quality](./skill-engineering-quality.md)
 - [skill-release-engineering](./skill-release-engineering.md)
 - [skill-repo-health](./skill-repo-health.md)
@@ -406,13 +427,16 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 ### frontend
 
+- [skill-design-engineering-craft](./skill-design-engineering-craft.md)
 - [skill-frontend-excellence](./skill-frontend-excellence.md)
 - [skill-frontend-ux-guardrails](./skill-frontend-ux-guardrails.md)
 - [skill-impeccable](./skill-impeccable.md)
 - [skill-melhorar-ux-ui-por-referencia](./skill-melhorar-ux-ui-por-referencia.md)
 - [skill-modern-ui-patterns](./skill-modern-ui-patterns.md)
+- [skill-motion-design-principles](./skill-motion-design-principles.md)
 - [skill-open-design-ui](./skill-open-design-ui.md)
 - [skill-premium-web-experience](./skill-premium-web-experience.md)
+- [skill-product-ux-architecture](./skill-product-ux-architecture.md)
 - [skill-web-clone](./skill-web-clone.md)
 
 ### gate
@@ -523,6 +547,10 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 - [skill-modern-ui-patterns](./skill-modern-ui-patterns.md)
 
+### motion
+
+- [skill-motion-design-principles](./skill-motion-design-principles.md)
+
 ### multi-stack
 
 - [skill-engineering-quality](./skill-engineering-quality.md)
@@ -563,6 +591,10 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 - [skill-cobranca-automatizada-saas-abacatepay](./skill-cobranca-automatizada-saas-abacatepay.md)
 - [skill-stripe-integration](./skill-stripe-integration.md)
 
+### polish
+
+- [skill-design-engineering-craft](./skill-design-engineering-craft.md)
+
 ### por
 
 - [skill-melhorar-ux-ui-por-referencia](./skill-melhorar-ux-ui-por-referencia.md)
@@ -579,6 +611,10 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 - [skill-live-processing](./skill-live-processing.md)
 - [skill-manual-video-processing](./skill-manual-video-processing.md)
+
+### product
+
+- [skill-product-ux-architecture](./skill-product-ux-architecture.md)
 
 ### product-docs
 
@@ -705,6 +741,7 @@ Páginas geradas deterministicamente a partir de [`SKILLS_MANIFEST.json`](../../
 
 - [skill-frontend-ux-guardrails](./skill-frontend-ux-guardrails.md)
 - [skill-melhorar-ux-ui-por-referencia](./skill-melhorar-ux-ui-por-referencia.md)
+- [skill-product-ux-architecture](./skill-product-ux-architecture.md)
 
 ### verification
 

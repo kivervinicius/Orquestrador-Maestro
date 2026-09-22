@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### V1 Router & Design Intelligence
+
+- **Router v3:** novo roteamento sobre Skill Contract V2 com evidência explícita, aliases, positive/negative routing, capability matching, chaining lazy e explicação de seleção/rejeição.
+- **Complexity Gate:** tarefas passam por classificação determinística `MICRO | SIMPLE | STANDARD | COMPLEX | DEEP`, com budgets de skills/contexto e fan-out proibido por padrão.
+- **Shadow rollout:** `go` mantém Router v2 ativo por padrão, calcula v3 sem duplicar execução e persiste a comparação na Mission; `--router-version 3` habilita teste explícito.
+- **Context budget:** quando v3 está ativo, exploração do codebase obedece ao budget definido pelo Complexity Gate em vez de usar 8k fixos.
+- **CLI:** novo `route explain [--json] "objetivo"` expõe intenção, complexidade, skill selecionada, evidência e budget estimado de contexto.
+- **Design:** `frontend-design` passa a alias de `skill-open-design-ui`; `impeccable` mantém a skill canônica existente; adicionadas `skill-product-ux-architecture`, `skill-design-engineering-craft` e `skill-motion-design-principles`.
+- **Claude Code:** as cinco capacidades de design ficam `mirrorEverywhere` e chegam a `.claude/skills` pelo sync normal do Maestro, sem fonte canônica duplicada.
+- **Catálogo:** 56 skills Maestro canônicas e 79 skills públicas únicas, com 0 IDs conflitantes após sincronização dos mirrors.
+
 ## 1.0.0-alpha.1 - 2026-09-22
 
 ### V1 Skill Intelligence Foundation

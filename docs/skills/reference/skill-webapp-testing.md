@@ -50,9 +50,11 @@ A skill é sincronizada para as raízes nativas configuradas pela política de i
 
 - Recipe `complete-product-frontend`: Frontend completo com Design Profile e Visual QA
 - Chain `skill-deep-wiki`
+- Chain `skill-design-engineering-craft`
 - Chain `skill-engineering-quality`
 - Chain `skill-frontend-excellence`
 - Chain `skill-impeccable`
+- Chain `skill-motion-design-principles`
 
 ## Evidência mínima de conclusão
 
