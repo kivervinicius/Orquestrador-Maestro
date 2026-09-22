@@ -96,6 +96,32 @@ function strongestEvidence(evidence) {
   )[0] || null;
 }
 
+function routingSignalSummary(record, options = {}) {
+  const capabilities = new Set(record?.contract?.capabilities || []);
+  const stackMatches = (options.stackCapabilities || []).filter((capability) => capabilities.has(capability));
+  const scopeMatches = (options.scopeCapabilities || []).filter((capability) => capabilities.has(capability));
+  const memoryHint = (options.memorySkillHints || []).includes(record.id);
+  const contextProvided = Array.isArray(options.availableContext);
+  const availableContext = new Set(options.availableContext || []);
+  const missingContext = contextProvided
+    ? (record?.contract?.context?.required || []).filter((item) => !availableContext.has(item))
+    : [];
+
+  const bonus =
+    stackMatches.length * 3000 +
+    scopeMatches.length * 4000 +
+    (memoryHint ? 5000 : 0) -
+    missingContext.length * 250;
+
+  return Object.freeze({
+    bonus,
+    stackMatches: Object.freeze([...stackMatches]),
+    scopeMatches: Object.freeze([...scopeMatches]),
+    memoryHint,
+    missingContext: Object.freeze([...missingContext])
+  });
+}
+
 function estimateContextTokens(records, budget) {
   const total = records.reduce((sum, record) => {
     const cost = record.contract?.costProfile?.context || "unknown";
@@ -317,12 +343,14 @@ class SkillRouterV3 {
         continue;
       }
 
+      const signals = routingSignalSummary(record, options);
       candidates.push({
         id: skillId,
         record,
         evidence: Object.freeze([...evidence]),
         strongest,
-        score: strongest.weight * 100000 + strongest.specificity * 100 + strongest.priority
+        signals,
+        score: strongest.weight * 100000 + strongest.specificity * 100 + strongest.priority + signals.bonus
       });
     }
 
@@ -380,6 +408,14 @@ class SkillRouterV3 {
       contextBudget: complexity.budget.maxContextTokens,
       matchedEvidence: Object.freeze(primary?.evidence || []),
       whySelected: Object.freeze(primary?.evidence || []),
+      routingSignals: Object.freeze({
+        changedFiles: Object.freeze([...(options.changedFiles || [])]),
+        stack: Object.freeze([...(options.stack || [])]),
+        stackCapabilities: Object.freeze([...(options.stackCapabilities || [])]),
+        scopeCapabilities: Object.freeze([...(options.scopeCapabilities || [])]),
+        memorySkillHints: Object.freeze([...(options.memorySkillHints || [])]),
+        selected: primary?.signals || null
+      }),
       rejected: Object.freeze(rejected)
     });
   }
@@ -405,6 +441,20 @@ class SkillRouterV3 {
       for (const evidence of result.whySelected) lines.push("  - " + evidence.kind + ": " + evidence.value);
     }
 
+    const selectedSignals = result.routingSignals?.selected;
+    if (selectedSignals && (
+      selectedSignals.stackMatches.length > 0 ||
+      selectedSignals.scopeMatches.length > 0 ||
+      selectedSignals.memoryHint ||
+      selectedSignals.missingContext.length > 0
+    )) {
+      lines.push("", "Routing signals:");
+      if (selectedSignals.stackMatches.length > 0) lines.push("  - stack: " + selectedSignals.stackMatches.join(", "));
+      if (selectedSignals.scopeMatches.length > 0) lines.push("  - changed-files: " + selectedSignals.scopeMatches.join(", "));
+      if (selectedSignals.memoryHint) lines.push("  - verified-memory: skill hint matched");
+      if (selectedSignals.missingContext.length > 0) lines.push("  - missing-context: " + selectedSignals.missingContext.join(", "));
+    }
+
     if (result.rejected.length > 0) {
       lines.push("", "Rejected:");
       for (const entry of result.rejected.slice(0, 8)) lines.push("  - " + entry.id + ": " + entry.reason);
@@ -423,5 +473,6 @@ module.exports = {
   negativeRouteMatches,
   normalizeText,
   phraseMatches,
+  routingSignalSummary,
   tokenize
 };
